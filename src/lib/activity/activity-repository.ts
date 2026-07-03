@@ -10,6 +10,8 @@ interface ActivityRow {
   distance_m: number;
   duration_ms: number;
   avg_pace_s_per_km: number | null;
+  active_calories_kcal: number | null;
+  avg_heart_rate_bpm: number | null;
   new_tiles: number;
   reclaimed_tiles: number;
   route_json: string;
@@ -23,6 +25,8 @@ interface ActivityInsert {
   distanceM: number;
   durationMs: number;
   avgPaceSPerKm: number | null;
+  activeCaloriesKcal: number | null;
+  avgHeartRateBpm: number | null;
   newTiles: number;
   reclaimedTiles: number;
   route: ActivityRoutePoint[];
@@ -37,6 +41,8 @@ function rowToActivity(row: ActivityRow): Activity {
     distanceM: row.distance_m,
     durationMs: row.duration_ms,
     avgPaceSPerKm: row.avg_pace_s_per_km,
+    activeCaloriesKcal: row.active_calories_kcal,
+    avgHeartRateBpm: row.avg_heart_rate_bpm,
     newTiles: row.new_tiles,
     reclaimedTiles: row.reclaimed_tiles,
     route: parseRoute(row.route_json),
@@ -75,10 +81,12 @@ export const activityRepository = {
         distance_m,
         duration_ms,
         avg_pace_s_per_km,
+        active_calories_kcal,
+        avg_heart_rate_bpm,
         new_tiles,
         reclaimed_tiles,
         route_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         insert.id,
         insert.type,
@@ -87,6 +95,8 @@ export const activityRepository = {
         insert.distanceM,
         insert.durationMs,
         insert.avgPaceSPerKm,
+        insert.activeCaloriesKcal,
+        insert.avgHeartRateBpm,
         insert.newTiles,
         insert.reclaimedTiles,
         serializeRoute(insert.route),

@@ -9,6 +9,7 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo/ui": "~57.0.1",
+    "@kayzmann/expo-healthkit": "^2.0.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@supabase/supabase-js": "^2.110.0",
     "aes-js": "^3.1.2",

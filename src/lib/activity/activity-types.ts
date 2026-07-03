@@ -13,6 +13,8 @@ export interface Activity {
   distanceM: number;
   durationMs: number;
   avgPaceSPerKm: number | null;
+  activeCaloriesKcal: number | null;
+  avgHeartRateBpm: number | null;
   newTiles: number;
   reclaimedTiles: number;
   route: ActivityRoutePoint[];
@@ -25,6 +27,8 @@ export interface ActiveSession {
   distanceM: number;
   durationMs: number;
   avgPaceSPerKm: number | null;
+  activeCaloriesKcal: number | null;
+  avgHeartRateBpm: number | null;
   newTiles: number;
   reclaimedTiles: number;
 }

@@ -46,3 +46,13 @@ export function formatPace(avgPaceSPerKm: number | null): string {
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")} /km`;
 }
+
+export function formatCalories(kcal: number | null): string {
+  if (kcal == null || kcal <= 0) return "—";
+  return `${Math.round(kcal)} kcal`;
+}
+
+export function formatHeartRate(bpm: number | null): string {
+  if (bpm == null || bpm <= 0) return "—";
+  return `${Math.round(bpm)} bpm`;
+}

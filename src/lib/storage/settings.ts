@@ -9,6 +9,7 @@ export const SETTINGS_KEYS = {
   colorScheme: "trace.colorScheme", // "dark" | "light"
   accentPreset: "trace.accentPreset", // AccentPreset
   backgroundTracking: "trace.backgroundTracking",
+  appleHealthEnabled: "trace.appleHealthEnabled",
   unlockedAchievements: "trace.unlockedAchievements", // string[] of ids
   deviceUserId: "trace.deviceUserId",
 } as const;

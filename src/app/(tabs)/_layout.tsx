@@ -16,6 +16,12 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Label>Map</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: "map", selected: "map.fill" }} />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="activities">
+        <NativeTabs.Trigger.Label>Activities</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "figure.run", selected: "figure.run.circle.fill" }}
+        />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="progress">
         <NativeTabs.Trigger.Label>Progress</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

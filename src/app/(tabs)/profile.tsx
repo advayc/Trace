@@ -10,6 +10,7 @@ import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
 import { fonts, radius, spacing } from "@/constants/theme";
 import { staggerDelay } from "@/lib/motion/stagger";
+import { useAppleHealth } from "@/hooks/use-apple-health";
 import { useSetting } from "@/hooks/use-settings";
 import { useTheme } from "@/hooks/use-theme";
 import { resetAchievements } from "@/lib/achievements/achievement-service";
@@ -97,6 +98,8 @@ export default function ProfileScreen() {
     SETTINGS_KEYS.backgroundTracking,
     false,
   );
+  const { available: healthAvailable, enabled: healthEnabled, busy: healthBusy, enable: enableHealth, disable: disableHealth } =
+    useAppleHealth();
   const [bgBusy, setBgBusy] = useState(false);
 
   useEffect(() => {
@@ -245,6 +248,25 @@ export default function ProfileScreen() {
             />
           }
         />
+        {process.env.EXPO_OS === "ios" && healthAvailable ? (
+          <SettingRow
+            sf="heart.fill"
+            title="Apple Health"
+            subtitle="Save workouts and read calories, heart rate, and steps."
+            index={3}
+            control={
+              <Switch
+                value={healthEnabled}
+                disabled={healthBusy}
+                onValueChange={(next) => {
+                  if (next) void enableHealth();
+                  else disableHealth();
+                }}
+                trackColor={{ true: colors.ember }}
+              />
+            }
+          />
+        ) : null}
       </View>
 
       <View style={{ gap: 12 }}>

@@ -4,7 +4,13 @@ import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { colors, fonts, radius } from "@/constants/theme";
 import type { Activity } from "@/lib/activity/activity-types";
-import { formatDistanceKm, formatDuration, formatPace } from "@/lib/activity/activity-format";
+import {
+  formatCalories,
+  formatDistanceKm,
+  formatDuration,
+  formatHeartRate,
+  formatPace,
+} from "@/lib/activity/activity-format";
 import { staggerDelay } from "@/lib/motion/stagger";
 import { formatCompact } from "@/lib/stats/format";
 
@@ -62,6 +68,12 @@ export function ActivityHistoryRow({
             {formatDistanceKm(activity.distanceM)} · {formatDuration(activity.durationMs)} ·{" "}
             {formatPace(activity.avgPaceSPerKm)}
           </Text>
+          {activity.activeCaloriesKcal != null || activity.avgHeartRateBpm != null ? (
+            <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textFaint }}>
+              {formatCalories(activity.activeCaloriesKcal)}
+              {activity.avgHeartRateBpm != null ? ` · ${formatHeartRate(activity.avgHeartRateBpm)}` : ""}
+            </Text>
+          ) : null}
         </View>
         <Text style={{ fontFamily: fonts.bold, fontSize: 15, color: colors.mint }}>
           +{formatCompact(activity.newTiles)}

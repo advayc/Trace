@@ -41,6 +41,10 @@ const MIGRATIONS: string[] = [
     achieved_at INTEGER NOT NULL
   );
   `,
+  `
+  ALTER TABLE activities ADD COLUMN active_calories_kcal REAL;
+  ALTER TABLE activities ADD COLUMN avg_heart_rate_bpm REAL;
+  `,
 ];
 
 export function runMigrations(db: SQLiteDatabase): void {

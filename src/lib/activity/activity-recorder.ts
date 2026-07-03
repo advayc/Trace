@@ -38,6 +38,7 @@ class ActivityRecorder {
   };
   private unsubscribers: (() => void)[] = [];
   private tickTimer: ReturnType<typeof setInterval> | null = null;
+  private healthTimer: ReturnType<typeof setInterval> | null = null;
 
   on<K extends EventKey>(event: K, handler: Handler<K>): () => void {
     this.handlers[event].add(handler);
@@ -67,6 +68,8 @@ class ActivityRecorder {
       distanceM: 0,
       durationMs: 0,
       avgPaceSPerKm: null,
+      activeCaloriesKcal: null,
+      avgHeartRateBpm: null,
       newTiles: 0,
       reclaimedTiles: 0,
     };
@@ -94,6 +97,8 @@ class ActivityRecorder {
       distanceM,
       durationMs,
       avgPaceSPerKm,
+      activeCaloriesKcal: this.session.activeCaloriesKcal,
+      avgHeartRateBpm: this.session.avgHeartRateBpm,
       newTiles: this.session.newTiles,
       reclaimedTiles: this.session.reclaimedTiles,
       route: simplifyRoute(this.route),
@@ -105,13 +110,23 @@ class ActivityRecorder {
     this.route = [];
     this.emit("session:updated", null);
 
-    activityRepository.saveCompleted(activity);
-    this.latest = activity;
-    matchSegments(activity);
     void healthService.writeWorkout(activity);
-    this.emit("session:ended", activity);
+    const metrics = await healthService.fetchWorkoutMetrics(
+      activity.startedAt,
+      activity.endedAt,
+    );
+    const enriched: Activity = {
+      ...activity,
+      activeCaloriesKcal: metrics.activeCaloriesKcal ?? activity.activeCaloriesKcal,
+      avgHeartRateBpm: metrics.avgHeartRateBpm ?? activity.avgHeartRateBpm,
+    };
 
-    return activity;
+    activityRepository.saveCompleted(enriched);
+    this.latest = enriched;
+    matchSegments(enriched);
+    this.emit("session:ended", enriched);
+
+    return enriched;
   }
 
   private startTick(): void {
@@ -122,6 +137,20 @@ class ActivityRecorder {
       this.session = { ...this.session, durationMs, avgPaceSPerKm };
       this.emit("session:updated", { ...this.session });
     }, 1000);
+
+    this.healthTimer = setInterval(() => {
+      if (!this.session || !healthService.isEnabled()) return;
+      const startedAt = this.session.startedAt;
+      void healthService.pollLiveMetrics(startedAt).then((metrics) => {
+        if (!this.session || this.session.startedAt !== startedAt) return;
+        this.session = {
+          ...this.session,
+          activeCaloriesKcal: metrics.activeCaloriesKcal,
+          avgHeartRateBpm: metrics.avgHeartRateBpm,
+        };
+        this.emit("session:updated", { ...this.session });
+      });
+    }, 5000);
   }
 
   private attachListeners(): void {
@@ -163,6 +192,10 @@ class ActivityRecorder {
     if (this.tickTimer) {
       clearInterval(this.tickTimer);
       this.tickTimer = null;
+    }
+    if (this.healthTimer) {
+      clearInterval(this.healthTimer);
+      this.healthTimer = null;
     }
   }
 }

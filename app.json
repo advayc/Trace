@@ -97,7 +97,14 @@
           }
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "@kayzmann/expo-healthkit",
+        {
+          "healthShareUsageDescription": "Trace can read step counts, calories, and heart rate to enrich your activity stats.",
+          "healthUpdateUsageDescription": "Trace can save completed walks and runs to Apple Health."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
