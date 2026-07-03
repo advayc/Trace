@@ -143,7 +143,7 @@ export default function OnboardingScreen() {
     } finally {
       settings.set(SETTINGS_KEYS.onboarded, true);
       setRequesting(false);
-      router.replace("/");
+      router.replace("/(tabs)");
     }
   };
 

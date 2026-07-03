@@ -53,6 +53,7 @@ export default function RootLayout() {
           animationDuration: 280,
         }}
       >
+        <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="onboarding"
