@@ -3,6 +3,7 @@ import { Polygon } from "react-native-maps";
 
 import { heatColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+import type { FriendTile } from "@/lib/friends/friends-service";
 import { cellPolygonCoords } from "@/lib/h3";
 import type { StompedTile } from "@/lib/storage/tile-db";
 
@@ -46,7 +47,7 @@ function withOpacity(hex: string, opacity: number): string {
 export const RevealedHexLayer = memo(function RevealedHexLayer({
   tiles,
 }: RevealedHexLayerProps) {
-  const { mapPalette } = useTheme();
+  const { mapPalette, heatStops } = useTheme();
 
   return (
     <>
@@ -60,6 +61,30 @@ export const RevealedHexLayer = memo(function RevealedHexLayer({
           )}
           strokeColor={mapPalette.revealedStroke}
           strokeWidth={0.5}
+        />
+      ))}
+    </>
+  );
+});
+
+interface FriendHexLayerProps {
+  tiles: FriendTile[];
+  colorByUserId: Record<string, string>;
+}
+
+export const FriendHexLayer = memo(function FriendHexLayer({
+  tiles,
+  colorByUserId,
+}: FriendHexLayerProps) {
+  return (
+    <>
+      {tiles.map((tile) => (
+        <Polygon
+          key={`${tile.userId}:${tile.h3Index}`}
+          coordinates={cellPolygonCoords(tile.h3Index)}
+          fillColor={colorByUserId[tile.userId] ?? "rgba(110,231,183,0.24)"}
+          strokeColor="rgba(255,255,255,0.05)"
+          strokeWidth={0.45}
         />
       ))}
     </>

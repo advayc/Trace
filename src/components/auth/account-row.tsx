@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 
+import { UserAvatar } from "@/components/auth/user-avatar";
 import { GoogleIcon } from "@/components/ui/google-icon";
 import { PillButton } from "@/components/ui/pill-button";
 import { fonts, radius } from "@/constants/theme";
@@ -47,15 +48,6 @@ function ProviderBadge({ provider }: { provider: User["provider"] }) {
       )}
     </View>
   );
-}
-
-function initialsFor(user: User): string {
-  const source = user.displayName ?? user.email ?? "?";
-  const parts = source.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
-  }
-  return source.slice(0, 2).toUpperCase();
 }
 
 function AccountDetail({ label, value }: { label: string; value: string }) {
@@ -130,28 +122,11 @@ export function AccountRow() {
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
           <View>
-            <View
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.borderStrong,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: fonts.bold,
-                  fontSize: 22,
-                  color: colors.text,
-                }}
-              >
-                {initialsFor(user)}
-              </Text>
-            </View>
+            <UserAvatar
+              displayName={displayName}
+              avatar={user.avatar}
+              size={64}
+            />
             <ProviderBadge provider={user.provider} />
           </View>
 
@@ -207,7 +182,19 @@ export function AccountRow() {
           <AccountDetail label="Provider" value={meta.label} />
         </View>
 
-        <PillButton label="Sign out" variant="outline" onPress={confirmSignOut} />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <PillButton
+            label="Edit profile"
+            onPress={() => router.push("/edit-profile" as never)}
+            style={{ flex: 1 }}
+          />
+          <PillButton
+            label="Sign out"
+            variant="outline"
+            onPress={confirmSignOut}
+            style={{ flex: 1 }}
+          />
+        </View>
       </View>
     );
   }

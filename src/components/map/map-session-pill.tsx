@@ -28,7 +28,7 @@ export function MapSessionPill({ sessionTiles }: MapSessionPillProps) {
           }}
         >
           <Image
-            source="sf:figure.walk"
+            source="sf:hexagon.fill"
             style={{ width: 16, height: 16 }}
             tintColor={colors.ember}
           />
@@ -41,7 +41,7 @@ export function MapSessionPill({ sessionTiles }: MapSessionPillProps) {
           <Text
             style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}
           >
-            this session
+            tiles this session
           </Text>
         </View>
       </GlassCard>

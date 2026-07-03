@@ -67,6 +67,10 @@ export default function RootLayout() {
           name="sign-in"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
+        <Stack.Screen
+          name="edit-profile"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
       </Stack>
       {splashVisible ? <AnimatedSplash onFinish={onSplashFinish} /> : null}
     </View>

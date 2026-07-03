@@ -4,6 +4,7 @@ import { Alert, ScrollView, Switch, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AccountRow } from "@/components/auth/account-row";
+import { AccentPresetPicker } from "@/components/auth/edit-profile-screen";
 import { PillButton } from "@/components/ui/pill-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -90,7 +91,7 @@ function SettingRow({
 }
 
 export default function ProfileScreen() {
-  const { colors, scheme, setColorScheme } = useTheme();
+  const { colors, scheme, accentPreset, setColorScheme, setAccentPreset } = useTheme();
   const [units, setUnits] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const [bgEnabled, setBgEnabled] = useSetting(
     SETTINGS_KEYS.backgroundTracking,
@@ -187,6 +188,32 @@ export default function ProfileScreen() {
             />
           }
         />
+        <Animated.View
+          entering={FadeInDown.duration(360).delay(staggerDelay(1, 70))}
+          style={{
+            backgroundColor: colors.surfaceRaised,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 18,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.text }}>
+            Accent color
+          </Text>
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 13,
+              color: colors.textMuted,
+              lineHeight: 18,
+            }}
+          >
+            Changes map reveals, buttons, and highlights across Trace.
+          </Text>
+          <AccentPresetPicker value={accentPreset} onChange={setAccentPreset} />
+        </Animated.View>
       </View>
 
       <View style={{ gap: 12 }}>

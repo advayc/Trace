@@ -6,16 +6,23 @@ import MapView, { type Region } from "react-native-maps";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FogHexLayer, RevealedHexLayer } from "@/components/map/hex-layers";
+import { FogHexLayer, FriendHexLayer, RevealedHexLayer } from "@/components/map/hex-layers";
+import { FriendLegend } from "@/components/map/friend-legend";
 import { MapSessionPill } from "@/components/map/map-session-pill";
 import { NeighborhoodPill } from "@/components/map/neighborhood-pill";
 import { RevealToast } from "@/components/map/reveal-toast";
 import { LiveStatsBar } from "@/components/activity/live-stats-bar";
 import { SessionControls } from "@/components/activity/session-controls";
 import { radius, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { useTheme } from "@/hooks/use-theme";
 import { useActivitySession } from "@/hooks/use-activity-session";
 import { activityRecorder } from "@/lib/activity/activity-recorder";
+import {
+  fetchFriendTilesInCells,
+  friendHueForUserId,
+  type FriendTile,
+} from "@/lib/friends/friends-service";
 import { cellsInBBox, estimateCellCount, type BoundingBox } from "@/lib/h3";
 import { locationService } from "@/lib/location/location-service";
 import { shareActivityCard, shareActivityFromMap } from "@/lib/share/capture-share-image";
@@ -54,8 +61,12 @@ export function FogMap() {
 
   const [fogCells, setFogCells] = useState<string[]>([]);
   const [revealedTiles, setRevealedTiles] = useState<StompedTile[]>([]);
+  const [friendTiles, setFriendTiles] = useState<FriendTile[]>([]);
+  const [friendTileColors, setFriendTileColors] = useState<Record<string, string>>({});
   const [revealCount, setRevealCount] = useState(0);
   const { activeSession, latestActivity } = useActivitySession();
+  const { user } = useAuthUser();
+  const friendFetchIdRef = useRef(0);
 
   const followUser = useSessionStore((s) => s.followUser);
   const setFollowUser = useSessionStore((s) => s.setFollowUser);
@@ -65,6 +76,22 @@ export function FogMap() {
   const setLastFix = useSessionStore((s) => s.setLastFix);
 
   const tabBarClearance = insets.bottom + TAB_BAR_HEIGHT + 12;
+
+  const activeFriendLegendItems = Object.keys(friendTileColors)
+    .map((userId) => {
+      const tile = friendTiles.find((t) => t.userId === userId);
+      return {
+        userId,
+        color: friendTileColors[userId],
+        displayName: tile?.displayName ?? null,
+      };
+    })
+    .slice(0, 5);
+
+  const friendFillColor = useCallback(
+    (userId: string) => `hsla(${friendHueForUserId(userId)}, 82%, 60%, 0.24)`,
+    [],
+  );
 
   const recomputeLayers = useCallback(() => {
     const box = regionToBBox(regionRef.current);
@@ -81,14 +108,40 @@ export function FogMap() {
     if (estimate > POLYGON_BUDGET) {
       setFogCells([]);
       setRevealedTiles(revealed);
+      setFriendTiles([]);
       return;
     }
 
     const revealedSet = new Set(revealed.map((t) => t.h3Index));
-    const fog = cellsInBBox(box).filter((c) => !revealedSet.has(c));
+    const viewportCells = cellsInBBox(box);
+    const fog = viewportCells.filter((c) => !revealedSet.has(c));
     setFogCells(fog.slice(0, Math.max(0, POLYGON_BUDGET - revealed.length)));
     setRevealedTiles(revealed);
-  }, []);
+
+    if (!user) {
+      setFriendTiles([]);
+      setFriendTileColors({});
+      return;
+    }
+
+    const fetchId = ++friendFetchIdRef.current;
+    fetchFriendTilesInCells(user.id, viewportCells)
+      .then((tiles) => {
+        if (fetchId !== friendFetchIdRef.current) return;
+        setFriendTiles(tiles);
+        const colorMap: Record<string, string> = {};
+        tiles.forEach((tile) => {
+          if (!colorMap[tile.userId]) {
+            colorMap[tile.userId] = friendFillColor(tile.userId);
+          }
+        });
+        setFriendTileColors(colorMap);
+      })
+      .catch(() => {
+        if (fetchId !== friendFetchIdRef.current) return;
+        setFriendTiles([]);
+      });
+  }, [friendFillColor, user]);
 
   const onRegionChangeComplete = useCallback(
     (region: Region) => {
@@ -193,6 +246,7 @@ export function FogMap() {
         onPanDrag={() => setFollowUser(false)}
       >
         <FogHexLayer cells={fogCells} />
+        <FriendHexLayer tiles={friendTiles} colorByUserId={friendTileColors} />
         <RevealedHexLayer tiles={revealedTiles} />
       </MapView>
 
@@ -205,7 +259,7 @@ export function FogMap() {
         }}
       />
 
-      {/* Top overlay: session pill (left) + neighborhood pill (center, no overlap) */}
+      {/* Top overlay: region coverage centered, session counter on its own row */}
       <View
         pointerEvents="box-none"
         style={{
@@ -213,15 +267,20 @@ export function FogMap() {
           top: insets.top + 12,
           left: 16,
           right: 16,
-          flexDirection: "row",
-          alignItems: "flex-start",
-          gap: 10,
+          gap: 8,
         }}
       >
-        <MapSessionPill sessionTiles={sessionNewTiles} />
-        <View style={{ flex: 1, alignItems: "center", minWidth: 0 }}>
+        <View style={{ alignItems: "center" }}>
           <NeighborhoodPill position={lastFix} />
         </View>
+        <View style={{ alignItems: "flex-start" }}>
+          <MapSessionPill sessionTiles={sessionNewTiles} />
+        </View>
+        {activeFriendLegendItems.length > 0 ? (
+          <View style={{ alignItems: "flex-end" }}>
+            <FriendLegend items={activeFriendLegendItems} />
+          </View>
+        ) : null}
       </View>
 
       {/* Bottom: session controls + live stats */}

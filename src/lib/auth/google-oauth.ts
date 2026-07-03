@@ -1,7 +1,9 @@
 /**
- * Browser-based Google OAuth for Supabase — avoids the native ID-token nonce
- * mismatch (@react-native-google-signin does not expose the raw nonce Supabase
- * expects when the token contains a nonce claim).
+ * Browser-based Google OAuth for Supabase.
+ *
+ * Native @react-native-google-signin cannot supply the raw nonce Supabase
+ * requires when Google's ID token includes a nonce claim — so we always use
+ * the OAuth browser flow instead of signInWithIdToken for Google.
  */
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
@@ -11,23 +13,69 @@ import { supabase } from "@/lib/supabase/client";
 
 WebBrowser.maybeCompleteAuthSession();
 
-function parseParamsFromUrl(url: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  const query = url.includes("?") ? url.split("?")[1]!.split("#")[0]! : "";
-  const hash = url.includes("#") ? url.split("#")[1]! : "";
-  for (const part of [query, hash].filter(Boolean)) {
-    for (const segment of part.split("&")) {
-      const [rawKey, rawValue] = segment.split("=");
-      if (!rawKey) continue;
-      params[decodeURIComponent(rawKey)] = decodeURIComponent(rawValue ?? "");
-    }
-  }
-  return params;
+/** Deep-link URI registered in Supabase → Authentication → URL Configuration. */
+export function getGoogleOAuthRedirectUri(): string {
+  return Linking.createURL("auth/callback");
 }
 
-/** Opens the Google OAuth sheet and returns once Supabase has a session. */
+function queryParamsFromUrl(url: string): Record<string, string> {
+  const parsed = Linking.parse(url);
+  const out: Record<string, string> = {};
+
+  const raw = parsed.queryParams ?? {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === "string") out[key] = value;
+    else if (Array.isArray(value) && typeof value[0] === "string") out[key] = value[0];
+  }
+
+  // Implicit-flow tokens land in the hash fragment.
+  const hashIndex = url.indexOf("#");
+  if (hashIndex !== -1) {
+    for (const segment of url.slice(hashIndex + 1).split("&")) {
+      const [rawKey, rawValue] = segment.split("=");
+      if (!rawKey) continue;
+      out[decodeURIComponent(rawKey)] = decodeURIComponent(rawValue ?? "");
+    }
+  }
+
+  return out;
+}
+
+/** Finish Supabase auth from the OAuth redirect URL (PKCE code or implicit tokens). */
+export async function completeSessionFromCallbackUrl(url: string): Promise<void> {
+  const params = queryParamsFromUrl(url);
+
+  if (params.error_description) {
+    throw new Error(params.error_description);
+  }
+  if (params.error) {
+    throw new Error(params.error);
+  }
+
+  if (params.code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(params.code);
+    if (error) throw error;
+    return;
+  }
+
+  if (params.access_token && params.refresh_token) {
+    const { error } = await supabase.auth.setSession({
+      access_token: params.access_token,
+      refresh_token: params.refresh_token,
+    });
+    if (error) throw error;
+    return;
+  }
+
+  throw new Error(
+    "Google sign-in did not return credentials. Add this redirect URL in Supabase → Authentication → URL Configuration: " +
+      getGoogleOAuthRedirectUri(),
+  );
+}
+
+/** Opens Google OAuth in an in-app browser and establishes a Supabase session. */
 export async function signInWithGoogleOAuth(): Promise<void> {
-  const redirectTo = Linking.createURL("auth/callback");
+  const redirectTo = getGoogleOAuthRedirectUri();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -47,29 +95,5 @@ export async function signInWithGoogleOAuth(): Promise<void> {
     throw new Error("Google sign-in did not complete. Try again.");
   }
 
-  const params = parseParamsFromUrl(result.url);
-  if (params.error_description) {
-    throw new Error(params.error_description);
-  }
-
-  if (params.code) {
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-      params.code,
-    );
-    if (exchangeError) throw exchangeError;
-    return;
-  }
-
-  const accessToken = params.access_token;
-  const refreshToken = params.refresh_token;
-  if (accessToken && refreshToken) {
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    if (sessionError) throw sessionError;
-    return;
-  }
-
-  throw new Error("Google sign-in did not return credentials. Try again.");
+  await completeSessionFromCallbackUrl(result.url);
 }

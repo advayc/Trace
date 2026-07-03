@@ -9,31 +9,24 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 import { SignInCancelledError } from "@/lib/auth/errors";
-import { parseAvatar } from "@/lib/auth/avatar-presets";
+import { parseAvatar, serializeAvatar } from "@/lib/auth/avatar-presets";
 import { signInWithGoogleOAuth } from "@/lib/auth/google-oauth";
-import {
-  getGoogleSignInModule,
-  isGoogleSignInAvailable,
-} from "@/lib/auth/google-signin-native";
-import { fetchProfile, updateProfile } from "@/lib/auth/profile-service";
+import { fetchProfile, updateProfile, type Profile } from "@/lib/auth/profile-service";
 import type { AuthProvider, User } from "@/lib/auth/types";
 import { supabase } from "@/lib/supabase/client";
 
-export { isGoogleSignInAvailable };
+export { isGoogleSignInAvailable } from "@/lib/auth/google-signin-native";
 export { SignInCancelledError } from "@/lib/auth/errors";
 
-function toUser(
-  supabaseUser: SupabaseUser,
-  profile?: { display_name: string | null; avatar_url: string | null } | null,
-): User {
+function toUser(supabaseUser: SupabaseUser, profile?: Profile | null): User {
   const meta = supabaseUser.user_metadata ?? {};
   const displayName =
-    profile?.display_name ??
+    profile?.displayName ??
     (meta.full_name as string | undefined) ??
     (meta.name as string | undefined) ??
     supabaseUser.email?.split("@")[0] ??
     null;
-  const avatarUrl = profile?.avatar_url ?? null;
+  const avatarUrl = profile?.avatarUrl ?? null;
 
   const rawProvider = supabaseUser.app_metadata?.provider;
   const provider: User["provider"] =
@@ -57,32 +50,6 @@ async function userFromSession(): Promise<User | null> {
   if (!supabaseUser) return null;
   const profile = await fetchProfile(supabaseUser.id);
   return toUser(supabaseUser, profile);
-}
-
-function isNonceAuthError(error: unknown): boolean {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === "object" && error && "message" in error
-        ? String((error as { message: unknown }).message)
-        : "";
-  return message.toLowerCase().includes("nonce");
-}
-
-let googleConfigured = false;
-
-function configureGoogle(): void {
-  if (googleConfigured) return;
-  const { GoogleSignin } = getGoogleSignInModule();
-  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  if (!iosClientId || !webClientId) {
-    throw new Error(
-      "Google Sign-In isn't configured yet. Set EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID and EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env (see README setup steps), then rebuild.",
-    );
-  }
-  GoogleSignin.configure({ iosClientId, webClientId });
-  googleConfigured = true;
 }
 
 export const authService: AuthProvider = {
@@ -136,66 +103,11 @@ export const authService: AuthProvider = {
   },
 
   async signInWithGoogle(): Promise<User> {
-    if (!isGoogleSignInAvailable()) {
-      await signInWithGoogleOAuth();
-      const user = await userFromSession();
-      if (!user) throw new Error("Google sign-in failed. Try again.");
-      return user;
-    }
-
-    const {
-      GoogleSignin,
-      isErrorWithCode,
-      isSuccessResponse,
-      statusCodes,
-    } = getGoogleSignInModule();
-    configureGoogle();
-
-    let idToken: string | null;
-    let accessToken: string | undefined;
-    try {
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
-      if (!isSuccessResponse(response)) {
-        throw new SignInCancelledError();
-      }
-      idToken = response.data.idToken;
-      try {
-        const tokens = await GoogleSignin.getTokens();
-        accessToken = tokens.accessToken;
-        idToken = tokens.idToken ?? idToken;
-      } catch {
-        // getTokens can fail before the session is fully established — idToken from signIn is enough.
-      }
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) {
-        throw new SignInCancelledError();
-      }
-      throw error;
-    }
-
-    if (!idToken) {
-      throw new Error("Google did not return an ID token. Try again.");
-    }
-
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: "google",
-      token: idToken,
-      access_token: accessToken,
-    });
-
-    if (error) {
-      if (isNonceAuthError(error)) {
-        await signInWithGoogleOAuth();
-        const user = await userFromSession();
-        if (!user) throw new Error("Google sign-in failed. Try again.");
-        return user;
-      }
-      throw error;
-    }
-
-    const profile = await fetchProfile(data.user.id);
-    return toUser(data.user, profile);
+    // Browser OAuth avoids the native ID-token nonce mismatch with Supabase.
+    await signInWithGoogleOAuth();
+    const user = await userFromSession();
+    if (!user) throw new Error("Google sign-in failed. Try again.");
+    return user;
   },
 
   async signInWithEmail(email: string, password: string): Promise<User> {
@@ -204,7 +116,8 @@ export const authService: AuthProvider = {
       password,
     });
     if (error) throw error;
-    return toUser(data.user);
+    const profile = await fetchProfile(data.user.id);
+    return toUser(data.user, profile);
   },
 
   async signUpWithEmail(email: string, password: string): Promise<User> {
@@ -214,7 +127,8 @@ export const authService: AuthProvider = {
     });
     if (error) throw error;
     if (!data.user) throw new Error("Sign up failed. Please try again.");
-    return toUser(data.user);
+    const profile = await fetchProfile(data.user.id);
+    return toUser(data.user, profile);
   },
 
   async signOut(): Promise<void> {
@@ -231,6 +145,18 @@ export const authService: AuthProvider = {
     if (!supabaseUser) throw new Error("Sign in to edit your profile.");
 
     await updateProfile(supabaseUser.id, patch);
+
+    const meta: Record<string, string | null> = {};
+    if (patch.displayName !== undefined) {
+      meta.full_name = patch.displayName.trim() || null;
+    }
+    if (patch.avatar !== undefined) {
+      meta.avatar_preset = serializeAvatar(patch.avatar);
+    }
+    if (Object.keys(meta).length > 0) {
+      await supabase.auth.updateUser({ data: meta });
+    }
+
     const profile = await fetchProfile(supabaseUser.id);
     return toUser(supabaseUser, profile);
   },

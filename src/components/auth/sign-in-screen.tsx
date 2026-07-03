@@ -18,7 +18,6 @@ import { colors, fonts, radius, spacing } from "@/constants/theme";
 import {
   SignInCancelledError,
   authService,
-  isGoogleSignInAvailable,
 } from "@/lib/auth/auth-service";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -40,7 +39,6 @@ export function SignInScreen() {
   const [closeHovered, setCloseHovered] = useState(false);
 
   const emailValid = email.includes("@") && password.length >= 6;
-  const googleAvailable = isGoogleSignInAvailable();
   const showApple = process.env.EXPO_OS === "ios";
 
   const run = async (kind: Exclude<Busy, null>, action: () => Promise<unknown>) => {
@@ -183,13 +181,8 @@ export function SignInScreen() {
             label="Continue with Google"
             variant="google"
             onPress={() => run("google", () => authService.signInWithGoogle())}
-            disabled={busy !== null || !googleAvailable}
+            disabled={busy !== null}
             loading={busy === "google"}
-            subtitle={
-              googleAvailable
-                ? undefined
-                : "Google Sign-In requires a dev build. Run npx expo run:ios — not available in Expo Go."
-            }
           />
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 2 }}>

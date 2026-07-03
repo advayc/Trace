@@ -2,7 +2,8 @@ import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { FadeInRight } from "react-native-reanimated";
 
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { formatCompact } from "@/lib/stats/format";
 import { staggerDelay } from "@/lib/motion/stagger";
 
@@ -17,6 +18,43 @@ interface LeaderboardRowProps {
   index?: number;
 }
 
+const MEDAL_COLORS: Record<1 | 2 | 3, string> = {
+  1: "#FFD700",
+  2: "#C0C0C0",
+  3: "#CD7F32",
+};
+
+function RankBadge({ rank }: { rank: number }) {
+  const { colors } = useTheme();
+  const medalColor = MEDAL_COLORS[rank as 1 | 2 | 3];
+
+  if (rank <= 3 && medalColor) {
+    return (
+      <View style={{ width: 28, alignItems: "center" }}>
+        <Image
+          source="sf:medal.fill"
+          style={{ width: 22, height: 22 }}
+          tintColor={medalColor}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <Text
+      style={{
+        fontFamily: fonts.displayBold,
+        fontSize: 18,
+        color: colors.textFaint,
+        width: 28,
+        textAlign: "center",
+      }}
+    >
+      {rank}
+    </Text>
+  );
+}
+
 export function LeaderboardRow({
   rank,
   name,
@@ -27,6 +65,8 @@ export function LeaderboardRow({
   isYou,
   index = 0,
 }: LeaderboardRowProps) {
+  const { colors } = useTheme();
+
   return (
     <Animated.View
       entering={FadeInRight.duration(360).delay(staggerDelay(index, 55))}
@@ -41,17 +81,7 @@ export function LeaderboardRow({
         padding: 16,
       }}
     >
-      <Text
-        style={{
-          fontFamily: fonts.displayBold,
-          fontSize: 18,
-          color: rank <= 3 ? colors.ember : colors.textFaint,
-          width: 28,
-          textAlign: "center",
-        }}
-      >
-        {rank}
-      </Text>
+      <RankBadge rank={rank} />
       <View
         style={{
           width: 42,
