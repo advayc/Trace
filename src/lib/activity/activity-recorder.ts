@@ -11,6 +11,7 @@ import type {
 } from "@/lib/activity/activity-types";
 import { matchSegments } from "@/lib/activity/segment-matcher";
 import { healthService } from "@/lib/health/health-service";
+import { sessionPresenceService } from "@/lib/notifications/session-presence-service";
 import {
   locationService,
   type ForegroundTrackingMode,
@@ -47,6 +48,9 @@ class ActivityRecorder {
 
   private emit<K extends EventKey>(event: K, payload: RecorderEvents[K]): void {
     this.handlers[event].forEach((fn) => fn(payload));
+    if (event === "session:updated" && payload) {
+      void sessionPresenceService.onSessionUpdated(payload as ActiveSession);
+    }
   }
 
   getActiveSession(): ActiveSession | null {
@@ -77,6 +81,7 @@ class ActivityRecorder {
     this.attachListeners();
     await locationService.setForegroundMode(type as ForegroundTrackingMode);
     this.startTick();
+    void sessionPresenceService.onSessionStarted({ ...this.session });
     this.emit("session:updated", { ...this.session });
   }
 
@@ -125,6 +130,7 @@ class ActivityRecorder {
     this.latest = enriched;
     matchSegments(enriched);
     this.emit("session:ended", enriched);
+    void sessionPresenceService.onSessionEnded(enriched);
 
     return enriched;
   }

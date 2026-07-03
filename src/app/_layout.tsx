@@ -9,13 +9,19 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { AppState, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Side effect: registers the background location task at module scope.
 import "@/lib/location/background-task";
+import "@/widgets/trace-walk-activity";
 import { AnimatedSplash } from "@/components/ui/animated-splash";
 import { useTheme } from "@/hooks/use-theme";
+import {
+  onAppBackground,
+  onAppForeground,
+} from "@/lib/notifications/daily-nudge";
+import { initNotificationService } from "@/lib/notifications/notification-service";
 import { getDb } from "@/lib/storage/tile-db";
 
 SplashScreen.preventAutoHideAsync();
@@ -38,6 +44,21 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    void initNotificationService();
+    void onAppForeground();
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        void onAppForeground();
+      } else if (state === "background") {
+        void onAppBackground();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   if (!fontsLoaded) return null;
 

@@ -17,6 +17,7 @@ import Animated, {
 import { PillButton } from "@/components/ui/pill-button";
 import { colors, fonts, radius, spacing } from "@/constants/theme";
 import { locationService } from "@/lib/location/location-service";
+import { requestNotificationPermission } from "@/lib/notifications/notification-service";
 import { SETTINGS_KEYS, settings } from "@/lib/storage/settings";
 
 interface Slide {
@@ -140,6 +141,7 @@ export default function OnboardingScreen() {
     setRequesting(true);
     try {
       await locationService.requestForegroundPermission();
+      await requestNotificationPermission();
     } finally {
       settings.set(SETTINGS_KEYS.onboarded, true);
       setRequesting(false);
@@ -184,7 +186,7 @@ export default function OnboardingScreen() {
           ))}
         </View>
         <PillButton
-          label={isLast ? "Allow location & start" : "Continue"}
+          label={isLast ? "Allow location & notifications" : "Continue"}
           onPress={advance}
           disabled={requesting}
         />
@@ -197,7 +199,8 @@ export default function OnboardingScreen() {
               textAlign: "center",
             }}
           >
-            Your precise location never leaves this device.
+            Your precise location never leaves this device. Notifications power
+            Live Activity, achievements, and evening reminders.
           </Text>
         ) : null}
       </Animated.View>

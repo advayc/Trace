@@ -12,6 +12,11 @@ export const SETTINGS_KEYS = {
   appleHealthEnabled: "trace.appleHealthEnabled",
   unlockedAchievements: "trace.unlockedAchievements", // string[] of ids
   deviceUserId: "trace.deviceUserId",
+  liveActivityEnabled: "trace.liveActivityEnabled",
+  achievementNotifications: "trace.achievementNotifications",
+  sessionSummaryNotifications: "trace.sessionSummaryNotifications",
+  dailyNudgeNotifications: "trace.dailyNudgeNotifications",
+  lastAppOpenDate: "trace.lastAppOpenDate",
 } as const;
 
 export const settings = {

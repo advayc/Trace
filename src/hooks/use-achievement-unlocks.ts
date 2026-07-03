@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 
 import {
   evaluateAchievements,
   getUnlockedIds,
 } from "@/lib/achievements/achievement-service";
 import type { AchievementDef } from "@/lib/achievements/definitions";
+import { notifyAchievementUnlocked } from "@/lib/notifications/achievement-notifications";
 import { computeStats } from "@/lib/stats/stats-service";
 import { stompEngine } from "@/lib/stomp/stomp-engine";
 
@@ -21,7 +23,13 @@ export function useAchievementUnlocks() {
       const fresh = evaluateAchievements(computeStats());
       if (fresh.length > 0) {
         setUnlockedIds(getUnlockedIds());
-        setCelebration(fresh[0]);
+        if (AppState.currentState === "active") {
+          setCelebration(fresh[0]);
+        } else {
+          for (const achievement of fresh) {
+            void notifyAchievementUnlocked(achievement);
+          }
+        }
       }
     });
     return unsubscribe;

@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, Switch, Text, View } from "react-native";
+import { Alert, Linking, ScrollView, Switch, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AccountRow } from "@/components/auth/account-row";
@@ -19,6 +19,8 @@ import {
   startBackgroundTracking,
   stopBackgroundTracking,
 } from "@/lib/location/background-task";
+import { cancelDailyNudge } from "@/lib/notifications/daily-nudge";
+import { hasNotificationPermission } from "@/lib/notifications/notification-service";
 import type { Units } from "@/lib/stats/format";
 import { SETTINGS_KEYS, settings } from "@/lib/storage/settings";
 import { tileRepository } from "@/lib/storage/tile-db";
@@ -101,8 +103,24 @@ export default function ProfileScreen() {
   const { available: healthAvailable, enabled: healthEnabled, busy: healthBusy, enable: enableHealth, disable: disableHealth } =
     useAppleHealth();
   const [bgBusy, setBgBusy] = useState(false);
+  const [notifGranted, setNotifGranted] = useState(true);
+  const [liveActivityEnabled, setLiveActivityEnabled] = useSetting(
+    SETTINGS_KEYS.liveActivityEnabled,
+    true,
+  );
+  const [achievementNotifications, setAchievementNotifications] = useSetting(
+    SETTINGS_KEYS.achievementNotifications,
+    true,
+  );
+  const [sessionSummaryNotifications, setSessionSummaryNotifications] =
+    useSetting(SETTINGS_KEYS.sessionSummaryNotifications, true);
+  const [dailyNudgeNotifications, setDailyNudgeNotifications] = useSetting(
+    SETTINGS_KEYS.dailyNudgeNotifications,
+    true,
+  );
 
   useEffect(() => {
+    void hasNotificationPermission().then(setNotifGranted);
     (async () => {
       const active = await isBackgroundTrackingActive();
       if (active !== bgEnabled) setBgEnabled(active);
@@ -267,6 +285,100 @@ export default function ProfileScreen() {
             }
           />
         ) : null}
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <SectionHeader title="Notifications" />
+        {!notifGranted ? (
+          <Animated.View
+            entering={FadeInDown.duration(360).delay(staggerDelay(2, 70))}
+            style={{
+              backgroundColor: colors.surfaceRaised,
+              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: 18,
+              gap: 10,
+            }}
+          >
+            <Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.text }}>
+              Notifications are off
+            </Text>
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 13,
+                color: colors.textMuted,
+                lineHeight: 18,
+              }}
+            >
+              Enable alerts in iOS Settings to use Live Activity, achievement
+              unlocks, and evening reminders.
+            </Text>
+            <PillButton
+              label="Open Settings"
+              variant="secondary"
+              onPress={() => void Linking.openSettings()}
+            />
+          </Animated.View>
+        ) : null}
+        {process.env.EXPO_OS === "ios" ? (
+          <SettingRow
+            sf="platter.filled.top.and.arrow.up.iphone"
+            title="Live Activity"
+            subtitle="Lock Screen and Dynamic Island stats during walks and runs."
+            index={4}
+            control={
+              <Switch
+                value={liveActivityEnabled}
+                onValueChange={setLiveActivityEnabled}
+                trackColor={{ true: colors.ember }}
+              />
+            }
+          />
+        ) : null}
+        <SettingRow
+          sf="trophy.fill"
+          title="Achievement alerts"
+          subtitle="Get notified when you unlock a milestone in the background."
+          index={5}
+          control={
+            <Switch
+              value={achievementNotifications}
+              onValueChange={setAchievementNotifications}
+              trackColor={{ true: colors.ember }}
+            />
+          }
+        />
+        <SettingRow
+          sf="flag.checkered"
+          title="Session summaries"
+          subtitle="A recap when you finish a walk or run with the app in the background."
+          index={6}
+          control={
+            <Switch
+              value={sessionSummaryNotifications}
+              onValueChange={setSessionSummaryNotifications}
+              trackColor={{ true: colors.ember }}
+            />
+          }
+        />
+        <SettingRow
+          sf="bell.fill"
+          title="Evening reminder"
+          subtitle="6:00 PM if you haven't opened Trace today."
+          index={7}
+          control={
+            <Switch
+              value={dailyNudgeNotifications}
+              onValueChange={(next) => {
+                setDailyNudgeNotifications(next);
+                if (!next) void cancelDailyNudge();
+              }}
+              trackColor={{ true: colors.ember }}
+            />
+          }
+        />
       </View>
 
       <View style={{ gap: 12 }}>

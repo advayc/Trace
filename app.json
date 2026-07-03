@@ -24,6 +24,7 @@
         "UIBackgroundModes": [
           "location"
         ],
+        "NSSupportsLiveActivities": true,
         "LSApplicationQueriesSchemes": [
           "sms"
         ]
@@ -48,7 +49,10 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION"
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -114,6 +118,28 @@
         {
           "healthShareUsageDescription": "Trace can read step counts, calories, and heart rate to enrich your activity stats.",
           "healthUpdateUsageDescription": "Trace can save completed walks and runs to Apple Health."
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.traceexplore.app",
+          "enablePushNotifications": false,
+          "widgets": [
+            {
+              "name": "TraceWalkActivity",
+              "displayName": "Walk Activity",
+              "description": "Live stats while you walk or run",
+              "supportedFamilies": ["systemSmall"]
+            }
+          ]
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/trace-icon.png",
+          "color": "#E8A04C"
         }
       ]
     ],
