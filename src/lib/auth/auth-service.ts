@@ -39,7 +39,12 @@ function toUser(supabaseUser: SupabaseUser): User {
       ? rawProvider
       : "device";
 
-  return { id: supabaseUser.id, displayName, provider };
+  return {
+    id: supabaseUser.id,
+    displayName,
+    email: supabaseUser.email ?? null,
+    provider,
+  };
 }
 
 let googleConfigured = false;
@@ -150,6 +155,16 @@ export const authService: AuthProvider = {
       password,
     });
     if (error) throw error;
+    return toUser(data.user);
+  },
+
+  async signUpWithEmail(email: string, password: string): Promise<User> {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+    });
+    if (error) throw error;
+    if (!data.user) throw new Error("Sign up failed. Please try again.");
     return toUser(data.user);
   },
 

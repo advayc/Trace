@@ -1,11 +1,14 @@
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { ActivityHeatmap } from "@/components/stats/activity-heatmap";
 import { AchievementGrid } from "@/components/stats/achievement-grid";
 import { StatCard } from "@/components/stats/stat-card";
 import { StreakRing } from "@/components/stats/streak-ring";
+import { TileIntensityGrid } from "@/components/stats/tile-intensity-grid";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
-import { colors, fonts } from "@/constants/theme";
+import { colors, spacing } from "@/constants/theme";
 import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
 import { useSetting } from "@/hooks/use-settings";
 import { useStats } from "@/hooks/use-stats";
@@ -16,6 +19,7 @@ import {
   formatDistance,
   type Units,
 } from "@/lib/stats/format";
+import { staggerDelay } from "@/lib/motion/stagger";
 import { SETTINGS_KEYS } from "@/lib/storage/settings";
 
 export default function ProgressScreen() {
@@ -27,28 +31,21 @@ export default function ProgressScreen() {
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 20, gap: 24, paddingTop: 72 }}
+      contentContainerStyle={{
+        padding: spacing.screen,
+        gap: spacing.section,
+        paddingTop: 72,
+        paddingBottom: 32,
+      }}
     >
-      <View style={{ gap: 4 }}>
-        <Animated.View entering={FadeInDown.duration(400)}>
-        <Text
-          style={{
-            fontFamily: fonts.displayBold,
-            fontSize: 34,
-            color: colors.text,
-          }}
-        >
-          Progress
-        </Text>
-        <Text
-          style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted }}
-        >
-          {stats.todayNewTiles > 0
+      <ScreenHeader
+        title="Progress"
+        subtitle={
+          stats.todayNewTiles > 0
             ? `${formatCompact(stats.todayNewTiles)} new tiles today — keep going.`
-            : "The blank spots are waiting."}
-        </Text>
-        </Animated.View>
-      </View>
+            : "The blank spots are waiting."
+        }
+      />
 
       <StreakRing
         current={stats.currentStreak}
@@ -56,7 +53,14 @@ export default function ProgressScreen() {
         todayActive={stats.todayNewTiles > 0}
       />
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+      <ActivityHeatmap />
+
+      <TileIntensityGrid />
+
+      <Animated.View
+        entering={FadeInDown.duration(380).delay(staggerDelay(1, 60))}
+        style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
+      >
         <StatCard
           label="Tiles stomped"
           value={formatCompact(stats.totalTiles)}
@@ -82,7 +86,7 @@ export default function ProgressScreen() {
           accent
           index={3}
         />
-      </View>
+      </Animated.View>
 
       <View style={{ gap: 14 }}>
         <SectionHeader

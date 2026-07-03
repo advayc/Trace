@@ -3,7 +3,7 @@ import { Linking, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { PillButton } from "@/components/ui/pill-button";
-import { colors, fonts } from "@/constants/theme";
+import { colors, fonts, radius } from "@/constants/theme";
 
 export function LocationDenied() {
   return (
@@ -15,34 +15,36 @@ export function LocationDenied() {
         alignItems: "center",
         justifyContent: "center",
         padding: 32,
-        gap: 16,
+        gap: 18,
       }}
     >
       <View
         style={{
           width: 88,
           height: 88,
-          borderRadius: 44,
-          backgroundColor: colors.surface,
+          borderRadius: radius.xl,
+          backgroundColor: colors.surfaceRaised,
+          borderWidth: 1,
+          borderColor: colors.border,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
         <Image
           source="sf:location.slash.fill"
-          style={{ width: 38, height: 38 }}
+          style={{ width: 36, height: 36 }}
           tintColor={colors.textMuted}
         />
       </View>
       <Text
         style={{
-          fontFamily: fonts.display,
-          fontSize: 24,
+          fontFamily: fonts.displayBold,
+          fontSize: 26,
           color: colors.text,
           textAlign: "center",
         }}
       >
-        The fog needs your location
+        Location access needed
       </Text>
       <Text
         style={{
@@ -50,7 +52,7 @@ export function LocationDenied() {
           fontSize: 15,
           color: colors.textMuted,
           textAlign: "center",
-          lineHeight: 22,
+          lineHeight: 23,
         }}
       >
         Trace can only reveal tiles where you actually walk. Allow location

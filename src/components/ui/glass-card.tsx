@@ -23,7 +23,7 @@ export function GlassCard({
         {
           borderRadius,
           borderWidth: 1,
-          borderColor: colors.border,
+          borderColor: colors.borderStrong,
           overflow: "hidden",
         },
         style,
@@ -31,8 +31,8 @@ export function GlassCard({
     >
       <BlurView
         tint="dark"
-        intensity={50}
-        style={[{ backgroundColor: "rgba(12,14,18,0.55)" }, contentStyle]}
+        intensity={40}
+        style={[{ backgroundColor: colors.glassBg }, contentStyle]}
       >
         {children}
       </BlurView>

@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0C0E12",
     "ios": {
-      "bundleIdentifier": "com.trace.app",
+      "bundleIdentifier": "com.traceexplore.app",
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "config": {
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "package": "com.trace.app",
+      "package": "com.traceexplore.app",
       "adaptiveIcon": {
         "backgroundColor": "#0C0E12",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
@@ -68,14 +68,17 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.REPLACE-WITH-IOS-CLIENT-ID"
+          "iosUrlScheme": "com.googleusercontent.apps.418709591835-9n42v8e78pkb6fid87a5kdrka4vcbjqb"
         }
       ],
       [
         "expo-build-properties",
         {
           "ios": {
-            "useModularHeaders": true
+            "extraPods": [
+              { "name": "GoogleUtilities", "modular_headers": true },
+              { "name": "RecaptchaInterop", "modular_headers": true }
+            ]
           }
         }
       ]

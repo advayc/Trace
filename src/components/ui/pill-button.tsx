@@ -6,7 +6,7 @@ import { colors, fonts, radius } from "@/constants/theme";
 interface PillButtonProps {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
 }
@@ -21,15 +21,22 @@ export function PillButton({
   const background =
     variant === "primary"
       ? colors.ember
-      : variant === "danger"
-        ? "rgba(248,113,113,0.14)"
-        : "transparent";
+      : variant === "secondary"
+        ? colors.surfaceRaised
+        : variant === "danger"
+          ? colors.dangerDim
+          : "transparent";
   const textColor =
     variant === "primary"
-      ? colors.bg
-      : variant === "danger"
-        ? colors.danger
-        : colors.text;
+      ? colors.text
+      : variant === "outline"
+        ? colors.ember
+        : variant === "danger"
+          ? colors.danger
+          : colors.text;
+  const borderWidth =
+    variant === "ghost" || variant === "secondary" || variant === "outline" ? 1.5 : 0;
+  const borderColor = variant === "outline" ? colors.ember : colors.border;
 
   return (
     <Pressable
@@ -44,17 +51,17 @@ export function PillButton({
         {
           backgroundColor: background,
           borderRadius: radius.pill,
-          borderWidth: variant === "ghost" ? 1 : 0,
-          borderColor: colors.border,
+          borderWidth,
+          borderColor,
           paddingVertical: 14,
-          paddingHorizontal: 24,
+          paddingHorizontal: 22,
           alignItems: "center",
-          opacity: disabled ? 0.4 : pressed ? 0.85 : 1,
+          opacity: disabled ? 0.4 : pressed ? 0.9 : 1,
         },
         style,
       ]}
     >
-      <Text style={{ fontFamily: fonts.bold, fontSize: 16, color: textColor }}>
+      <Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: textColor }}>
         {label}
       </Text>
     </Pressable>

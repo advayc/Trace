@@ -18,7 +18,7 @@ function loadGoogleSignInModule(): GoogleSignInModule | null {
   } catch {
     moduleCache = null;
   }
-  return moduleCache;
+  return moduleCache ?? null;
 }
 
 /** True when the native Google Sign-In module is linked (dev/production builds). */

@@ -1,14 +1,17 @@
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { LeaderboardRow } from "@/components/friends/leaderboard-row";
 import { PillButton } from "@/components/ui/pill-button";
-import { colors, fonts, radius } from "@/constants/theme";
+import { ScreenHeader } from "@/components/ui/screen-header";
+import { colors, fonts, radius, spacing } from "@/constants/theme";
 import { DEMO_FRIENDS } from "@/constants/demo-friends";
 import { useStats } from "@/hooks/use-stats";
 
 export default function FriendsScreen() {
+  const router = useRouter();
   const stats = useStats();
 
   const board = [
@@ -19,7 +22,7 @@ export default function FriendsScreen() {
       initials: "YO",
       tiles: stats.totalTiles,
       streak: stats.currentStreak,
-      hue: 33,
+      hue: 220,
       isYou: true,
     },
   ].sort((a, b) => b.tiles - a.tiles);
@@ -28,49 +31,50 @@ export default function FriendsScreen() {
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 20, gap: 20, paddingTop: 72 }}
+      contentContainerStyle={{
+        padding: spacing.screen,
+        gap: spacing.section,
+        paddingTop: 72,
+        paddingBottom: 32,
+      }}
     >
-      <View style={{ gap: 4 }}>
-        <Animated.View entering={FadeInDown.duration(400)}>
-        <Text
-          style={{
-            fontFamily: fonts.displayBold,
-            fontSize: 34,
-            color: colors.text,
-          }}
-        >
-          Friends
-        </Text>
-        <Text
-          style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted }}
-        >
-          Who's really stomped more ground?
-        </Text>
-        </Animated.View>
-      </View>
+      <ScreenHeader
+        title="Friends"
+        subtitle="Compare coverage with people you walk with."
+      />
 
-      {/* Coming-soon CTA — auth lands in Phase 2 */}
       <Animated.View
         entering={FadeInDown.duration(400).delay(80)}
         style={{
           backgroundColor: colors.surfaceRaised,
           borderRadius: radius.lg,
           borderWidth: 1,
-          borderColor: "rgba(232,160,76,0.3)",
-          padding: 20,
-          gap: 12,
+          borderColor: colors.accentBorder,
+          padding: 22,
+          gap: 14,
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Image
-            source="sf:sparkles"
-            style={{ width: 20, height: 20 }}
-            tintColor={colors.ember}
-          />
-          <Text
-            style={{ fontFamily: fonts.bold, fontSize: 17, color: colors.text }}
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: colors.emberDim,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            Real leaderboards are coming
+            <Image
+              source="sf:person.2.fill"
+              style={{ width: 18, height: 18 }}
+              tintColor={colors.ember}
+            />
+          </View>
+          <Text
+            style={{ fontFamily: fonts.semibold, fontSize: 17, color: colors.text }}
+          >
+            Sign in to unlock leaderboards
           </Text>
         </View>
         <Text
@@ -81,11 +85,13 @@ export default function FriendsScreen() {
             lineHeight: 21,
           }}
         >
-          Sign-in with Apple or Google, invite links, and neighborhood
-          head-to-heads arrive in a future update. Below is a preview with
-          sample explorers — your tile count is already real.
+          Connect with Apple, Google, or email to sync tiles and compete.
+          Below is a preview — your tile count is already real.
         </Text>
-        <PillButton label="Sign in to compete — coming soon" onPress={() => {}} disabled />
+        <PillButton
+          label="Sign in or create account"
+          onPress={() => router.push("/sign-in")}
+        />
       </Animated.View>
 
       <View style={{ gap: 10 }}>
@@ -110,10 +116,9 @@ export default function FriendsScreen() {
           fontSize: 12,
           color: colors.textFaint,
           textAlign: "center",
-          paddingBottom: 12,
         }}
       >
-        Friends will only ever see your tile counts — never your routes.
+        Friends only see tile counts — never your routes.
       </Text>
     </ScrollView>
   );

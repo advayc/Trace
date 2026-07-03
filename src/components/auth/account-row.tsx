@@ -2,18 +2,89 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 
+import { GoogleIcon } from "@/components/ui/google-icon";
+import { PillButton } from "@/components/ui/pill-button";
 import { colors, fonts, radius } from "@/constants/theme";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { authService } from "@/lib/auth/auth-service";
+import type { User } from "@/lib/auth/types";
 
-const PROVIDER_LABEL = {
-  apple: "Apple",
-  google: "Google",
-  email: "Email",
-  device: "This device",
+const PROVIDER_META = {
+  apple: { label: "Apple", kind: "sf" as const, sf: "apple.logo" },
+  google: { label: "Google", kind: "google" as const },
+  email: { label: "Email", kind: "sf" as const, sf: "envelope.fill" },
+  device: { label: "This device", kind: "sf" as const, sf: "iphone" },
 } as const;
 
-/** Profile-tab entry point for optional sign-in; shows account state when signed in. */
+function ProviderBadge({ provider }: { provider: User["provider"] }) {
+  const meta = PROVIDER_META[provider];
+  return (
+    <View
+      style={{
+        position: "absolute",
+        right: -2,
+        bottom: -2,
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: colors.buttonLight,
+        borderWidth: 2,
+        borderColor: colors.surfaceRaised,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {meta.kind === "google" ? (
+        <GoogleIcon size={14} />
+      ) : (
+        <Image
+          source={`sf:${meta.sf}`}
+          style={{ width: 13, height: 13 }}
+          tintColor={colors.buttonLightText}
+        />
+      )}
+    </View>
+  );
+}
+
+function initialsFor(user: User): string {
+  const source = user.displayName ?? user.email ?? "?";
+  const parts = source.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+  }
+  return source.slice(0, 2).toUpperCase();
+}
+
+function AccountDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ gap: 3 }}>
+      <Text
+        style={{
+          fontFamily: fonts.medium,
+          fontSize: 11,
+          letterSpacing: 0.6,
+          textTransform: "uppercase",
+          color: colors.textFaint,
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        selectable
+        style={{
+          fontFamily: fonts.body,
+          fontSize: 15,
+          color: colors.text,
+        }}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+/** Profile-tab account card — full details when signed in, CTA when signed out. */
 export function AccountRow() {
   const router = useRouter();
   const { user, loading } = useAuthUser();
@@ -38,51 +109,100 @@ export function AccountRow() {
   if (loading) return null;
 
   if (user) {
+    const meta = PROVIDER_META[user.provider];
+    const displayName = user.displayName ?? user.email?.split("@")[0] ?? "Explorer";
+
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 14,
-          backgroundColor: colors.surface,
-          borderRadius: radius.md,
+          backgroundColor: colors.surfaceRaised,
+          borderRadius: radius.lg,
           borderWidth: 1,
           borderColor: colors.border,
-          padding: 16,
+          padding: 20,
+          gap: 18,
         }}
       >
-        <Image
-          source="sf:person.crop.circle.fill"
-          style={{ width: 22, height: 22 }}
-          tintColor={colors.mint}
-        />
-        <View style={{ flex: 1, gap: 3 }}>
-          <Text
-            style={{ fontFamily: fonts.medium, fontSize: 16, color: colors.text }}
-          >
-            {user.displayName ?? "Signed in"}
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 13,
-              color: colors.textMuted,
-            }}
-          >
-            Signed in with {PROVIDER_LABEL[user.provider]}
-          </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+          <View>
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.borderStrong,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.bold,
+                  fontSize: 22,
+                  color: colors.text,
+                }}
+              >
+                {initialsFor(user)}
+              </Text>
+            </View>
+            <ProviderBadge provider={user.provider} />
+          </View>
+
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text
+              style={{
+                fontFamily: fonts.bold,
+                fontSize: 20,
+                color: colors.text,
+              }}
+            >
+              {displayName}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View
+                style={{
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: radius.pill,
+                  backgroundColor: colors.mintDim,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.medium,
+                    fontSize: 11,
+                    color: colors.textMuted,
+                  }}
+                >
+                  {meta.label}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
-        <Pressable
-          onPress={confirmSignOut}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-        >
-          <Text
-            style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.danger }}
-          >
-            Sign out
-          </Text>
-        </Pressable>
+
+        <View
+          style={{
+            height: 1,
+            backgroundColor: colors.border,
+          }}
+        />
+
+        <View style={{ gap: 14 }}>
+          <AccountDetail label="Name" value={displayName} />
+          {user.email ? (
+            <AccountDetail label="Email" value={user.email} />
+          ) : (
+            <AccountDetail label="Email" value="Not shared by provider" />
+          )}
+          <AccountDetail label="Provider" value={meta.label} />
+        </View>
+
+        <PillButton label="Sign out" variant="outline" onPress={confirmSignOut} />
       </View>
     );
   }
@@ -91,45 +211,57 @@ export function AccountRow() {
     <Pressable
       onPress={() => router.push("/sign-in")}
       style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 14,
-        backgroundColor: colors.surface,
-        borderRadius: radius.md,
+        backgroundColor: colors.surfaceRaised,
+        borderRadius: radius.lg,
         borderWidth: 1,
         borderColor: colors.border,
-        padding: 16,
-        opacity: pressed ? 0.85 : 1,
+        padding: 20,
+        gap: 14,
+        opacity: pressed ? 0.92 : 1,
       })}
     >
-      <Image
-        source="sf:person.crop.circle.badge.plus"
-        style={{ width: 22, height: 22 }}
-        tintColor={colors.ember}
-      />
-      <View style={{ flex: 1, gap: 3 }}>
-        <Text
-          style={{ fontFamily: fonts.medium, fontSize: 16, color: colors.text }}
-        >
-          Sign in to sync & compete
-        </Text>
-        <Text
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+        <View
           style={{
-            fontFamily: fonts.body,
-            fontSize: 13,
-            color: colors.textMuted,
-            lineHeight: 18,
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.borderStrong,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          Optional. Trace works fully offline — sign in only if you want
-          friends and cross-device sync later.
-        </Text>
+          <Image
+            source="sf:person.crop.circle"
+            style={{ width: 26, height: 26 }}
+            tintColor={colors.textMuted}
+          />
+        </View>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text
+            style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}
+          >
+            Sign in or create account
+          </Text>
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 13,
+              color: colors.textMuted,
+              lineHeight: 18,
+            }}
+          >
+            Apple, Google, or email
+          </Text>
+        </View>
+        <Image
+          source="sf:chevron.right"
+          style={{ width: 14, height: 14 }}
+          tintColor={colors.textFaint}
+        />
       </View>
-      <Image
-        source="sf:chevron.right"
-        style={{ width: 14, height: 14 }}
-        tintColor={colors.textFaint}
-      />
     </Pressable>
   );
 }

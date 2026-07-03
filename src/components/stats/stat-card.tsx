@@ -19,26 +19,38 @@ export function StatCard({ label, value, sf, accent, index = 0 }: StatCardProps)
       entering={FadeInUp.duration(380).delay(staggerDelay(index, 70))}
       style={{
         flex: 1,
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceRaised,
         borderRadius: radius.md,
         borderWidth: 1,
         borderColor: colors.border,
-        padding: 16,
-        gap: 10,
+        padding: 18,
+        gap: 12,
         minWidth: 140,
       }}
     >
-      <Image
-        source={`sf:${sf}`}
-        style={{ width: 18, height: 18 }}
-        tintColor={accent ? colors.mint : colors.ember}
-      />
+      <View
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: accent ? colors.mintDim : colors.emberDim,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Image
+          source={`sf:${sf}`}
+          style={{ width: 16, height: 16 }}
+          tintColor={accent ? colors.mint : colors.ember}
+        />
+      </View>
       <Text
         selectable
         style={{
           fontFamily: fonts.displayBold,
-          fontSize: 28,
+          fontSize: 30,
           color: colors.text,
+          letterSpacing: -0.3,
         }}
       >
         {value}

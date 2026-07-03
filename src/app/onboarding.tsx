@@ -15,7 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { PillButton } from "@/components/ui/pill-button";
-import { colors, fonts, radius } from "@/constants/theme";
+import { colors, fonts, radius, spacing } from "@/constants/theme";
 import { locationService } from "@/lib/location/location-service";
 import { SETTINGS_KEYS, settings } from "@/lib/storage/settings";
 
@@ -31,19 +31,19 @@ const SLIDES: Slide[] = [
     key: "fog",
     sf: "cloud.fog.fill",
     title: "Your city starts\nunder fog",
-    body: "The whole map is dark until you move through it. Every street you walk, run, or roll down clears a tile — for good.",
+    body: "The whole map is dark until you move through it. Every street you walk clears a tile — permanently.",
   },
   {
     key: "reveal",
     sf: "hexagon.fill",
     title: "Walk it.\nReveal it. Keep it.",
-    body: "Only real movement counts. No tapping, no shortcuts — your map becomes a record of everywhere you've actually been.",
+    body: "Only real movement counts. No tapping, no shortcuts — your map becomes a record of everywhere you've been.",
   },
   {
     key: "streaks",
     sf: "flame.fill",
-    title: "Streaks, stats,\nand bragging rights",
-    body: "Watch your coverage climb, keep daily streaks alive, and unlock achievements as the blank spots disappear.",
+    title: "Streaks, stats,\nand milestones",
+    body: "Track coverage, keep daily streaks alive, and unlock achievements as the blank spots disappear.",
   },
 ];
 
@@ -62,30 +62,30 @@ function OnboardingSlide({
         width,
         alignItems: "center",
         justifyContent: "center",
-        padding: 36,
-        gap: 26,
+        padding: spacing.screen,
+        gap: 28,
       }}
     >
       <Animated.View
         key={active ? `${item.key}-on` : `${item.key}-off`}
         entering={active ? FadeInDown.duration(480).springify() : undefined}
-        style={{ alignItems: "center", gap: 26 }}
+        style={{ alignItems: "center", gap: 28 }}
       >
         <View
           style={{
-            width: 120,
-            height: 120,
-            borderRadius: 60,
+            width: 112,
+            height: 112,
+            borderRadius: radius.xl,
             backgroundColor: colors.emberDim,
             borderWidth: 1,
-            borderColor: "rgba(232,160,76,0.35)",
+            borderColor: colors.accentBorder,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
           <Image
             source={`sf:${item.sf}`}
-            style={{ width: 52, height: 52 }}
+            style={{ width: 48, height: 48 }}
             tintColor={colors.ember}
           />
         </View>
@@ -96,6 +96,7 @@ function OnboardingSlide({
             lineHeight: 42,
             color: colors.text,
             textAlign: "center",
+            letterSpacing: -0.5,
           }}
         >
           {item.title}
@@ -104,7 +105,7 @@ function OnboardingSlide({
           style={{
             fontFamily: fonts.body,
             fontSize: 16,
-            lineHeight: 24,
+            lineHeight: 25,
             color: colors.textMuted,
             textAlign: "center",
           }}
@@ -164,7 +165,7 @@ export default function OnboardingScreen() {
 
       <Animated.View
         entering={FadeInUp.duration(500).delay(200)}
-        style={{ padding: 28, gap: 20, paddingBottom: 52 }}
+        style={{ padding: spacing.screen, gap: 20, paddingBottom: 52 }}
       >
         <View
           style={{ flexDirection: "row", justifyContent: "center", gap: 8 }}
@@ -174,7 +175,7 @@ export default function OnboardingScreen() {
               key={s.key}
               layout={LinearTransition.springify()}
               style={{
-                width: i === page ? 22 : 8,
+                width: i === page ? 24 : 8,
                 height: 8,
                 borderRadius: radius.pill,
                 backgroundColor: i === page ? colors.ember : colors.fog,
@@ -183,7 +184,7 @@ export default function OnboardingScreen() {
           ))}
         </View>
         <PillButton
-          label={isLast ? "Allow location & start" : "Next"}
+          label={isLast ? "Allow location & start" : "Continue"}
           onPress={advance}
           disabled={requesting}
         />

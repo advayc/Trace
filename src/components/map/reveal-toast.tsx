@@ -43,7 +43,7 @@ export function RevealToast({ revealCount, sessionTiles }: RevealToastProps) {
       style={[
         {
           backgroundColor: colors.emberDim,
-          borderColor: "rgba(232,160,76,0.4)",
+          borderColor: colors.accentBorder,
           borderWidth: 1,
           borderRadius: radius.pill,
           paddingVertical: 8,
@@ -53,7 +53,7 @@ export function RevealToast({ revealCount, sessionTiles }: RevealToastProps) {
       ]}
     >
       <Text
-        style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.emberLight }}
+        style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.emberLight }}
       >
         +1 tile · {sessionTiles} this walk
       </Text>

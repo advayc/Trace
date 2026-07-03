@@ -186,6 +186,51 @@ export const tileRepository = {
     return row?.m ?? 0;
   },
 
+  /** Last N calendar days of activity, oldest first. Missing days are zero-filled. */
+  recentDailyStats(days: number, now = Date.now()): DailyStat[] {
+    const end = localDay(now);
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - (days - 1));
+    const start = localDay(startDate.getTime());
+
+    const rows = getDb().getAllSync<{
+      day: string;
+      distance_m: number;
+      new_tiles: number;
+    }>(
+      "SELECT day, distance_m, new_tiles FROM daily_stats WHERE day >= ? AND day <= ? ORDER BY day ASC",
+      [start, end],
+    );
+    const byDay = new Map(
+      rows.map((row) => [
+        row.day,
+        {
+          day: row.day,
+          distanceM: row.distance_m,
+          newTiles: row.new_tiles,
+        } satisfies DailyStat,
+      ]),
+    );
+
+    const result: DailyStat[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - (days - 1 - i));
+      const day = localDay(d.getTime());
+      result.push(byDay.get(day) ?? { day, distanceM: 0, newTiles: 0 });
+    }
+    return result;
+  },
+
+  /** Recent tiles for revisit-intensity visualization (no h3 indexes exposed). */
+  recentTileVisits(limit: number): { visitCount: number }[] {
+    const rows = getDb().getAllSync<{ visit_count: number }>(
+      "SELECT visit_count FROM stomped_tiles ORDER BY last_stomped_at DESC LIMIT ?",
+      [limit],
+    );
+    return rows.map((row) => ({ visitCount: row.visit_count }));
+  },
+
   clearAll(): void {
     const database = getDb();
     database.execSync("DELETE FROM stomped_tiles; DELETE FROM daily_stats;");

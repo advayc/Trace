@@ -1,12 +1,9 @@
 import {
-  DMSans_400Regular,
-  DMSans_500Medium,
-  DMSans_700Bold,
-} from "@expo-google-fonts/dm-sans";
-import {
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-} from "@expo-google-fonts/fraunces";
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -27,11 +24,10 @@ getDb();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
-    DMSans_400Regular,
-    DMSans_500Medium,
-    DMSans_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
   const [splashVisible, setSplashVisible] = useState(true);
 
@@ -66,7 +62,7 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="sign-in"
-          options={{ presentation: "modal", animation: "default" }}
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
       </Stack>
       {splashVisible ? <AnimatedSplash onFinish={onSplashFinish} /> : null}

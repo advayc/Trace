@@ -1,26 +1,26 @@
-import * as AppleAuthentication from "expo-apple-authentication";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
-import { PillButton } from "@/components/ui/pill-button";
-import { colors, fonts, radius } from "@/constants/theme";
+import { SocialAuthButton } from "@/components/ui/social-auth-button";
+import { TextField } from "@/components/ui/text-field";
+import { colors, fonts, radius, spacing } from "@/constants/theme";
 import {
   SignInCancelledError,
   authService,
   isGoogleSignInAvailable,
 } from "@/lib/auth/auth-service";
 
+type AuthMode = "sign-in" | "sign-up";
 type Busy = "apple" | "google" | "email" | null;
 
 function errorMessage(error: unknown): string {
@@ -30,16 +30,16 @@ function errorMessage(error: unknown): string {
 
 export function SignInScreen() {
   const router = useRouter();
+  const [mode, setMode] = useState<AuthMode>("sign-in");
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState<string | null>(null);
-  const [appleAvailable, setAppleAvailable] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
-  }, []);
+  const emailValid = email.includes("@") && password.length >= 6;
+  const googleAvailable = isGoogleSignInAvailable();
+  const showApple = process.env.EXPO_OS === "ios";
 
   const run = async (kind: Exclude<Busy, null>, action: () => Promise<unknown>) => {
     if (busy) return;
@@ -60,259 +60,255 @@ export function SignInScreen() {
     }
   };
 
-  const emailValid = email.includes("@") && password.length > 0;
+  const handleEmail = () => {
+    if (mode === "sign-up") {
+      run("email", () => authService.signUpWithEmail(email, password));
+    } else {
+      run("email", () => authService.signInWithEmail(email, password));
+    }
+  };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.bg }}
       behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
     >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          paddingHorizontal: spacing.screen,
+          paddingTop: 8,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Image
+            source="sf:xmark"
+            style={{ width: 18, height: 18 }}
+            tintColor={colors.textMuted}
+          />
+        </Pressable>
+      </View>
+
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 24, gap: 28, paddingTop: 36 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          padding: spacing.screen,
+          paddingBottom: 32,
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ alignItems: "flex-end" }}>
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={12}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-          >
-            <Image
-              source="sf:xmark.circle.fill"
-              style={{ width: 28, height: 28 }}
-              tintColor={colors.textFaint}
-            />
-          </Pressable>
-        </View>
-
-        <View style={{ gap: 10, alignItems: "center" }}>
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: radius.md,
-              backgroundColor: colors.emberDim,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image
-              source="sf:map.fill"
-              style={{ width: 30, height: 30 }}
-              tintColor={colors.ember}
-            />
-          </View>
-          <Text
-            style={{
-              fontFamily: fonts.displayBold,
-              fontSize: 30,
-              color: colors.text,
-              textAlign: "center",
-            }}
-          >
-            Carry your map with you
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 15,
-              color: colors.textMuted,
-              textAlign: "center",
-              lineHeight: 22,
-            }}
-          >
-            Sign in to sync your explored tiles and compete with friends.
-            Optional — Trace works fully offline without an account.
-          </Text>
-        </View>
-
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            backgroundColor: colors.mintDim,
-            borderRadius: radius.sm,
-            padding: 12,
+            backgroundColor: colors.surface,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 24,
+            gap: 14,
           }}
         >
-          <Image
-            source="sf:lock.shield.fill"
-            style={{ width: 16, height: 16 }}
-            tintColor={colors.mint}
-          />
-          <Text
-            style={{
-              flex: 1,
-              fontFamily: fonts.body,
-              fontSize: 12.5,
-              color: colors.textMuted,
-              lineHeight: 17,
-            }}
-          >
-            Your precise location never leaves this device — only coarse
-            hexagon IDs are ever synced.
-          </Text>
-        </View>
+          <View style={{ gap: 6, marginBottom: 4 }}>
+            <Text
+              style={{
+                fontFamily: fonts.bold,
+                fontSize: 22,
+                color: colors.text,
+                textAlign: "center",
+              }}
+            >
+              {mode === "sign-in" ? "Sign in to Trace" : "Create your account"}
+            </Text>
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 14,
+                color: colors.textMuted,
+                textAlign: "center",
+                lineHeight: 20,
+              }}
+            >
+              Sync tiles and compete with friends. Optional — works offline too.
+            </Text>
+          </View>
 
-        <View style={{ gap: 12 }}>
-          {appleAvailable && (
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonType={
-                AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
-              }
-              buttonStyle={
-                AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-              }
-              cornerRadius={radius.pill}
-              style={{ height: 50, opacity: busy && busy !== "apple" ? 0.4 : 1 }}
+          {showApple ? (
+            <SocialAuthButton
+              label="Continue with Apple"
+              variant="apple"
               onPress={() => run("apple", () => authService.signInWithApple())}
+              disabled={busy !== null}
+              loading={busy === "apple"}
             />
-          )}
+          ) : null}
 
-          <Pressable
-            disabled={busy !== null}
+          <SocialAuthButton
+            label="Continue with Google"
+            variant="google"
             onPress={() => run("google", () => authService.signInWithGoogle())}
-            style={({ pressed }) => ({
-              height: 50,
-              borderRadius: radius.pill,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              opacity: busy && busy !== "google" ? 0.4 : pressed ? 0.85 : 1,
-            })}
-          >
-            {busy === "google" ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <>
-                <Image
-                  source="sf:g.circle.fill"
-                  style={{ width: 20, height: 20 }}
-                  tintColor={colors.text}
+            disabled={busy !== null || !googleAvailable}
+            loading={busy === "google"}
+            subtitle={
+              googleAvailable
+                ? undefined
+                : "Google Sign-In requires a dev build. Run npx expo run:ios — not available in Expo Go."
+            }
+          />
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 2 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+            <Text
+              style={{
+                fontFamily: fonts.medium,
+                fontSize: 12,
+                color: colors.textFaint,
+                letterSpacing: 0.5,
+              }}
+            >
+              OR
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+          </View>
+
+          {!showEmail ? (
+            <>
+              <SocialAuthButton
+                label="Continue with Email"
+                variant="primary"
+                onPress={() => {
+                  setMode("sign-in");
+                  setShowEmail(true);
+                  setError(null);
+                }}
+                disabled={busy !== null}
+              />
+              <SocialAuthButton
+                label="Sign Up with Email"
+                variant="outline"
+                onPress={() => {
+                  setMode("sign-up");
+                  setShowEmail(true);
+                  setError(null);
+                }}
+                disabled={busy !== null}
+              />
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 13,
+                  color: colors.textFaint,
+                  textAlign: "center",
+                }}
+              >
+                Password sign-in continues on the next step.
+              </Text>
+            </>
+          ) : (
+            <View style={{ gap: 12 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.semibold,
+                  fontSize: 15,
+                  color: colors.text,
+                  textAlign: "center",
+                }}
+              >
+                {mode === "sign-up" ? "Create account with email" : "Sign in with email"}
+              </Text>
+              <TextField
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="username"
+                editable={busy === null}
+              />
+              <TextField
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder={mode === "sign-up" ? "At least 6 characters" : "Your password"}
+                secureTextEntry
+                textContentType={mode === "sign-up" ? "newPassword" : "password"}
+                editable={busy === null}
+              />
+              {busy === "email" ? (
+                <View style={{ paddingVertical: 12, alignItems: "center" }}>
+                  <ActivityIndicator color={colors.ember} />
+                </View>
+              ) : (
+                <SocialAuthButton
+                  label={mode === "sign-up" ? "Create account" : "Sign in"}
+                  variant="primary"
+                  onPress={handleEmail}
+                  disabled={!emailValid}
                 />
+              )}
+              <Pressable onPress={() => setShowEmail(false)} hitSlop={8}>
                 <Text
                   style={{
-                    fontFamily: fonts.bold,
-                    fontSize: 16,
-                    color: colors.text,
+                    fontFamily: fonts.medium,
+                    fontSize: 14,
+                    color: colors.textMuted,
+                    textAlign: "center",
                   }}
                 >
-                  Continue with Google
+                  Back to other options
                 </Text>
-              </>
-            )}
-          </Pressable>
-        </View>
+              </Pressable>
+            </View>
+          )}
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-          <Text
-            style={{
-              fontFamily: fonts.medium,
-              fontSize: 12,
-              color: colors.textFaint,
-              letterSpacing: 1,
-            }}
-          >
-            OR
-          </Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-        </View>
-
-        {!showEmail ? (
-          <PillButton
-            label="Sign in with email"
-            variant="ghost"
-            onPress={() => setShowEmail(true)}
-          />
-        ) : (
-          <View style={{ gap: 12 }}>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
-              placeholderTextColor={colors.textFaint}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              textContentType="username"
-              editable={busy === null}
+          {error ? (
+            <View
               style={{
-                fontFamily: fonts.body,
-                fontSize: 16,
-                color: colors.text,
-                backgroundColor: colors.surface,
-                borderRadius: radius.md,
-                borderWidth: 1,
-                borderColor: colors.border,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
+                backgroundColor: colors.dangerDim,
+                borderRadius: radius.sm,
+                padding: 12,
               }}
-            />
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Password"
-              placeholderTextColor={colors.textFaint}
-              secureTextEntry
-              textContentType="password"
-              editable={busy === null}
-              style={{
-                fontFamily: fonts.body,
-                fontSize: 16,
-                color: colors.text,
-                backgroundColor: colors.surface,
-                borderRadius: radius.md,
-                borderWidth: 1,
-                borderColor: colors.border,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-              }}
-            />
-            {busy === "email" ? (
-              <View style={{ paddingVertical: 14, alignItems: "center" }}>
-                <ActivityIndicator color={colors.ember} />
-              </View>
-            ) : (
-              <PillButton
-                label="Sign in"
-                disabled={!emailValid}
-                onPress={() =>
-                  run("email", () => authService.signInWithEmail(email, password))
-                }
-              />
-            )}
-          </View>
-        )}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.medium,
+                  fontSize: 13,
+                  color: colors.danger,
+                  lineHeight: 18,
+                  textAlign: "center",
+                }}
+              >
+                {error}
+              </Text>
+            </View>
+          ) : null}
 
-        {error && (
-          <View
-            style={{
-              backgroundColor: "rgba(248,113,113,0.12)",
-              borderRadius: radius.sm,
-              padding: 12,
-            }}
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginTop: 4 })}
           >
             <Text
               style={{
                 fontFamily: fonts.medium,
-                fontSize: 13.5,
-                color: colors.danger,
-                lineHeight: 19,
+                fontSize: 14,
+                color: colors.textMuted,
                 textAlign: "center",
+                textDecorationLine: "underline",
               }}
             >
-              {error}
+              Continue as guest
             </Text>
-          </View>
-        )}
+          </Pressable>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

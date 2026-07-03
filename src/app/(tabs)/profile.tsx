@@ -5,8 +5,9 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AccountRow } from "@/components/auth/account-row";
 import { PillButton } from "@/components/ui/pill-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
-import { colors, fonts, radius } from "@/constants/theme";
+import { colors, fonts, radius, spacing } from "@/constants/theme";
 import { staggerDelay } from "@/lib/motion/stagger";
 import { useSetting } from "@/hooks/use-settings";
 import { resetAchievements } from "@/lib/achievements/achievement-service";
@@ -40,21 +41,32 @@ function SettingRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 14,
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceRaised,
         borderRadius: radius.md,
         borderWidth: 1,
         borderColor: colors.border,
-        padding: 16,
+        padding: 18,
       }}
     >
-      <Image
-        source={`sf:${sf}`}
-        style={{ width: 22, height: 22 }}
-        tintColor={colors.ember}
-      />
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.emberDim,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Image
+          source={`sf:${sf}`}
+          style={{ width: 18, height: 18 }}
+          tintColor={colors.ember}
+        />
+      </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text
-          style={{ fontFamily: fonts.medium, fontSize: 16, color: colors.text }}
+          style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.text }}
         >
           {title}
         </Text>
@@ -82,7 +94,6 @@ export default function ProfileScreen() {
   );
   const [bgBusy, setBgBusy] = useState(false);
 
-  // Reconcile the persisted toggle with the OS task state on mount.
   useEffect(() => {
     (async () => {
       const active = await isBackgroundTrackingActive();
@@ -140,26 +151,14 @@ export default function ProfileScreen() {
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 20, gap: 24, paddingTop: 72 }}
+      contentContainerStyle={{
+        padding: spacing.screen,
+        gap: spacing.section,
+        paddingTop: 72,
+        paddingBottom: 32,
+      }}
     >
-      <View style={{ gap: 4 }}>
-        <Animated.View entering={FadeInDown.duration(400)}>
-        <Text
-          style={{
-            fontFamily: fonts.displayBold,
-            fontSize: 34,
-            color: colors.text,
-          }}
-        >
-          You
-        </Text>
-        <Text
-          style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted }}
-        >
-          Your map, your rules.
-        </Text>
-        </Animated.View>
-      </View>
+      <ScreenHeader title="You" subtitle="Your map, your rules." />
 
       <Animated.View
         entering={FadeInDown.duration(360).delay(staggerDelay(0, 70))}
@@ -174,7 +173,7 @@ export default function ProfileScreen() {
         <SettingRow
           sf="location.fill.viewfinder"
           title="Background tracking"
-          subtitle='Keep revealing tiles with the screen locked or another app open. Requires "Always" location. Off by default.'
+          subtitle='Keep revealing tiles with the screen locked. Requires "Always" location. Off by default.'
           index={0}
           control={
             <Switch
@@ -205,22 +204,22 @@ export default function ProfileScreen() {
         <Animated.View
           entering={FadeInDown.duration(360).delay(staggerDelay(2, 70))}
           style={{
-            backgroundColor: colors.surface,
+            backgroundColor: colors.surfaceRaised,
             borderRadius: radius.md,
             borderWidth: 1,
-            borderColor: colors.border,
-            padding: 16,
-            gap: 8,
+            borderColor: colors.successBorder,
+            padding: 18,
+            gap: 10,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Image
               source="sf:lock.shield.fill"
               style={{ width: 18, height: 18 }}
               tintColor={colors.mint}
             />
             <Text
-              style={{ fontFamily: fonts.bold, fontSize: 15, color: colors.text }}
+              style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.text }}
             >
               Everything stays on this device
             </Text>
@@ -254,7 +253,6 @@ export default function ProfileScreen() {
           fontSize: 12,
           color: colors.textFaint,
           textAlign: "center",
-          paddingBottom: 12,
         }}
       >
         Trace v1.0 — walk to unlock your city.

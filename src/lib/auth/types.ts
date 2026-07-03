@@ -6,6 +6,7 @@
 export interface User {
   id: string;
   displayName: string | null;
+  email: string | null;
   provider: "device" | "apple" | "google" | "email";
 }
 
@@ -14,5 +15,6 @@ export interface AuthProvider {
   signInWithApple(): Promise<User>;
   signInWithGoogle(): Promise<User>;
   signInWithEmail(email: string, password: string): Promise<User>;
+  signUpWithEmail(email: string, password: string): Promise<User>;
   signOut(): Promise<void>;
 }

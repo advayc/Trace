@@ -63,19 +63,19 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
         overlayStyle,
       ]}
     >
-      <Animated.View style={[{ alignItems: "center", gap: 18 }, logoStyle]}>
+      <Animated.View style={[{ alignItems: "center", gap: 20 }, logoStyle]}>
         <Image
           source={require("@/assets/images/trace-icon.png")}
-          style={{ width: 112, height: 112, borderRadius: 28 }}
+          style={{ width: 96, height: 96, borderRadius: 24 }}
           contentFit="contain"
         />
-        <View style={{ alignItems: "center", gap: 6 }}>
+        <View style={{ alignItems: "center", gap: 8 }}>
           <Text
             style={{
               fontFamily: fonts.displayBold,
-              fontSize: 32,
+              fontSize: 36,
               color: colors.text,
-              letterSpacing: 1,
+              letterSpacing: -0.5,
             }}
           >
             Trace
@@ -85,7 +85,7 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
               fontFamily: fonts.body,
               fontSize: 14,
               color: colors.textMuted,
-              letterSpacing: 0.4,
+              letterSpacing: 0.3,
             }}
           >
             Walk to reveal your city

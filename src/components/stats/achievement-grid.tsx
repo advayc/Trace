@@ -30,16 +30,14 @@ export function AchievementGrid({ unlockedIds }: AchievementGridProps) {
             style={{
               width: "30.5%",
               flexGrow: 1,
-              backgroundColor: isUnlocked ? colors.surfaceRaised : colors.surface,
+              backgroundColor: colors.surfaceRaised,
               borderRadius: radius.md,
               borderWidth: 1,
-              borderColor: isUnlocked
-                ? "rgba(232,160,76,0.35)"
-                : colors.border,
-              padding: 12,
+              borderColor: isUnlocked ? colors.accentBorder : colors.border,
+              padding: 14,
               alignItems: "center",
-              gap: 8,
-              opacity: isUnlocked ? 1 : 0.55,
+              gap: 10,
+              opacity: isUnlocked ? 1 : 0.5,
             }}
           >
             <View

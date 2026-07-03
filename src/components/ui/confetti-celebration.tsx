@@ -6,7 +6,6 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -14,7 +13,7 @@ import Animated, {
 import { colors, fonts, radius } from "@/constants/theme";
 import type { AchievementDef } from "@/lib/achievements/definitions";
 
-const PIECE_COLORS = [colors.ember, colors.emberLight, colors.mint, colors.text];
+const PIECE_COLORS = [colors.ember, colors.emberLight, colors.mint, colors.mintLight];
 const PIECE_COUNT = 26;
 
 interface PieceSpec {
@@ -30,10 +29,10 @@ function ConfettiPiece({ spec, height }: { spec: PieceSpec; height: number }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withDelay(
-      spec.delay,
-      withTiming(1, { duration: 1700, easing: Easing.out(Easing.quad) }),
-    );
+    progress.value = withTiming(1, {
+      duration: 1700 + spec.delay,
+      easing: Easing.out(Easing.quad),
+    });
   }, [progress, spec.delay]);
 
   const style = useAnimatedStyle(() => ({
@@ -113,7 +112,7 @@ export function ConfettiCelebration({
         onPress={onDismiss}
         style={{
           flex: 1,
-          backgroundColor: "rgba(6,7,10,0.82)",
+          backgroundColor: colors.overlay,
           alignItems: "center",
           justifyContent: "center",
           padding: 32,
@@ -129,10 +128,10 @@ export function ConfettiCelebration({
         <Animated.View
           style={[
             {
-              backgroundColor: colors.surface,
+              backgroundColor: colors.surfaceRaised,
               borderRadius: radius.lg,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: colors.accentBorder,
               padding: 28,
               alignItems: "center",
               gap: 14,
@@ -160,8 +159,8 @@ export function ConfettiCelebration({
           </View>
           <Text
             style={{
-              fontFamily: fonts.body,
-              fontSize: 13,
+              fontFamily: fonts.semibold,
+              fontSize: 12,
               letterSpacing: 2,
               textTransform: "uppercase",
               color: colors.mint,

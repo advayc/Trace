@@ -47,7 +47,7 @@ export async function startBackgroundTracking(): Promise<
     foregroundService: {
       notificationTitle: "Trace is revealing tiles",
       notificationBody: "Your walk is clearing fog on your map.",
-      notificationColor: "#E8A04C",
+      notificationColor: "#C8533C",
     },
   });
   return "started";

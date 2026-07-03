@@ -34,11 +34,11 @@ export function LeaderboardRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 14,
-        backgroundColor: isYou ? colors.surfaceRaised : colors.surface,
+        backgroundColor: colors.surfaceRaised,
         borderRadius: radius.md,
         borderWidth: 1,
-        borderColor: isYou ? "rgba(232,160,76,0.35)" : colors.border,
-        padding: 14,
+        borderColor: isYou ? colors.accentBorder : colors.border,
+        padding: 16,
       }}
     >
       <Text
@@ -57,7 +57,7 @@ export function LeaderboardRow({
           width: 42,
           height: 42,
           borderRadius: 21,
-          backgroundColor: `hsl(${hue}, 45%, 22%)`,
+          backgroundColor: `hsl(${hue}, 50%, 18%)`,
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -66,7 +66,7 @@ export function LeaderboardRow({
           style={{
             fontFamily: fonts.bold,
             fontSize: 14,
-            color: `hsl(${hue}, 70%, 72%)`,
+            color: `hsl(${hue}, 70%, 75%)`,
           }}
         >
           {initials}
@@ -74,10 +74,10 @@ export function LeaderboardRow({
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <Text
-          style={{ fontFamily: fonts.medium, fontSize: 16, color: colors.text }}
+          style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}
         >
           {name}
-          {isYou ? "  (you)" : ""}
+          {isYou ? "  · you" : ""}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           <Image

@@ -15,22 +15,22 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
     <Animated.View
       entering={FadeInDown.duration(420).delay(60)}
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceRaised,
         borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: colors.border,
-        padding: 20,
+        borderColor: current > 0 ? colors.successBorder : colors.border,
+        padding: 22,
         flexDirection: "row",
         alignItems: "center",
-        gap: 18,
+        gap: 20,
       }}
     >
       <View
         style={{
-          width: 92,
-          height: 92,
-          borderRadius: 46,
-          borderWidth: 4,
+          width: 88,
+          height: 88,
+          borderRadius: 44,
+          borderWidth: 3,
           borderColor: current > 0 ? colors.mint : colors.fog,
           backgroundColor: colors.mintDim,
           alignItems: "center",
@@ -55,7 +55,7 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
             tintColor={colors.mint}
           />
           <Text
-            style={{ fontFamily: fonts.bold, fontSize: 17, color: colors.text }}
+            style={{ fontFamily: fonts.semibold, fontSize: 17, color: colors.text }}
           >
             {current === 1 ? "1 day streak" : `${current} day streak`}
           </Text>

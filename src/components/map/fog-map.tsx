@@ -214,13 +214,13 @@ export function FogMap() {
           style={({ pressed }) => ({
             width: 48,
             height: 48,
-            borderRadius: radius.pill,
-            backgroundColor: followUser ? colors.ember : colors.surface,
+            borderRadius: radius.md,
+            backgroundColor: followUser ? colors.ember : colors.surfaceRaised,
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: followUser ? colors.ember : colors.borderStrong,
             alignItems: "center",
             justifyContent: "center",
-            opacity: pressed ? 0.8 : 1,
+            opacity: pressed ? 0.85 : 1,
           })}
         >
           <Image
