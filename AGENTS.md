@@ -6,12 +6,12 @@ Trace is an Expo (SDK 57) iOS fog-of-war walking app. Expo has changed significa
 
 Read the matching skill BEFORE working in that area:
 
-- Anything Trace (start here) → `.cursor/skills/trace-app/SKILL.md`
-- Map / tiles / H3 / location / SQLite / performance → `.cursor/skills/trace-map-engine/SKILL.md`
-- UI screens / theming / animations / components → `.cursor/skills/trace-ui/SKILL.md` + `~/.agents/skills/building-native-ui/SKILL.md`
-- Icons / splash / badges / image generation → `.cursor/skills/trace-assets/SKILL.md`
-- Builds / simulator / device install / TestFlight → `~/.agents/skills/expo-deployment/SKILL.md` (v1 uses local `npx expo run:ios`, not EAS)
-- Auth / Supabase / friends backend (Phase 2, not built yet) → `~/.agents/skills/vibe-security/SKILL.md`
+- Anything Trace (start here) → `.agents/skills/trace-app/SKILL.md`
+- Map / tiles / H3 / location / SQLite / performance → `.agents/skills/trace-map-engine/SKILL.md`
+- UI screens / theming / animations / components → `.agents/skills/trace-ui/SKILL.md` + `.agents/skills/building-native-ui/SKILL.md`
+- Icons / splash / badges / image generation → `.agents/skills/trace-assets/SKILL.md`
+- Builds / simulator / device install / TestFlight → `.agents/skills/expo-deployment/SKILL.md` (v1 uses local `npx expo run:ios`, not EAS)
+- Auth / Supabase / friends backend (Phase 2, not built yet) → `.agents/skills/vibe-security/SKILL.md`
 
 ## Hard rules
 

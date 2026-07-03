@@ -24,7 +24,7 @@
       "package": "com.trace.app",
       "adaptiveIcon": {
         "backgroundColor": "#0C0E12",
-        "foregroundImage": "./assets/images/trace-icon.png"
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",

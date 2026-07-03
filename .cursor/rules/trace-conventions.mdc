@@ -14,4 +14,4 @@ alwaysApply: true
 - Tiles unlock only through `StompEngine` with validated GPS samples; no debug reveal paths in shipped code.
 - Storage: `expo-sqlite` for tiles/stats, `expo-sqlite/localStorage` polyfill for key-value — never AsyncStorage.
 - `process.env.EXPO_OS` not `Platform.OS`; SF Symbols via `expo-image` `source="sf:..."`; scrollable roots use `contentInsetAdjustmentBehavior="automatic"`.
-- Before working on map/engine, UI, or assets, read the matching skill in `.cursor/skills/` (see `AGENTS.md`).
+- Before working on map/engine, UI, or assets, read the matching skill in `.agents/skills/` (see `AGENTS.md`).
