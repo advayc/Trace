@@ -1,4 +1,5 @@
 import { ScrollView, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AchievementGrid } from "@/components/stats/achievement-grid";
 import { StatCard } from "@/components/stats/stat-card";
@@ -29,6 +30,7 @@ export default function ProgressScreen() {
       contentContainerStyle={{ padding: 20, gap: 24, paddingTop: 72 }}
     >
       <View style={{ gap: 4 }}>
+        <Animated.View entering={FadeInDown.duration(400)}>
         <Text
           style={{
             fontFamily: fonts.displayBold,
@@ -45,6 +47,7 @@ export default function ProgressScreen() {
             ? `${formatCompact(stats.todayNewTiles)} new tiles today — keep going.`
             : "The blank spots are waiting."}
         </Text>
+        </Animated.View>
       </View>
 
       <StreakRing
@@ -58,22 +61,26 @@ export default function ProgressScreen() {
           label="Tiles stomped"
           value={formatCompact(stats.totalTiles)}
           sf="hexagon.fill"
+          index={0}
         />
         <StatCard
           label="Area revealed"
           value={formatArea(stats.areaKm2, units)}
           sf="square.dashed"
+          index={1}
         />
         <StatCard
           label="Distance covered"
           value={formatDistance(stats.distanceM, units)}
           sf="figure.walk"
+          index={2}
         />
         <StatCard
           label="Active days"
           value={formatCompact(stats.activeDays)}
           sf="calendar"
           accent
+          index={3}
         />
       </View>
 

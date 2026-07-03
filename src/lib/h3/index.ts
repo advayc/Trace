@@ -1,3 +1,5 @@
+import "@/lib/polyfills/text-decoder-polyfill";
+
 import {
   cellToBoundary,
   cellToLatLng,

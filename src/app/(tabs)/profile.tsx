@@ -1,10 +1,13 @@
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, Switch, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { AccountRow } from "@/components/auth/account-row";
 import { PillButton } from "@/components/ui/pill-button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { colors, fonts, radius } from "@/constants/theme";
+import { staggerDelay } from "@/lib/motion/stagger";
 import { useSetting } from "@/hooks/use-settings";
 import { resetAchievements } from "@/lib/achievements/achievement-service";
 import {
@@ -22,14 +25,17 @@ function SettingRow({
   title,
   subtitle,
   control,
+  index = 0,
 }: {
   sf: string;
   title: string;
   subtitle: string;
   control: React.ReactNode;
+  index?: number;
 }) {
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.duration(360).delay(staggerDelay(index, 70))}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -64,7 +70,7 @@ function SettingRow({
         </Text>
       </View>
       {control}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -137,6 +143,7 @@ export default function ProfileScreen() {
       contentContainerStyle={{ padding: 20, gap: 24, paddingTop: 72 }}
     >
       <View style={{ gap: 4 }}>
+        <Animated.View entering={FadeInDown.duration(400)}>
         <Text
           style={{
             fontFamily: fonts.displayBold,
@@ -151,7 +158,16 @@ export default function ProfileScreen() {
         >
           Your map, your rules.
         </Text>
+        </Animated.View>
       </View>
+
+      <Animated.View
+        entering={FadeInDown.duration(360).delay(staggerDelay(0, 70))}
+        style={{ gap: 12 }}
+      >
+        <SectionHeader title="Account" />
+        <AccountRow />
+      </Animated.View>
 
       <View style={{ gap: 12 }}>
         <SectionHeader title="Tracking" />
@@ -159,6 +175,7 @@ export default function ProfileScreen() {
           sf="location.fill.viewfinder"
           title="Background tracking"
           subtitle='Keep revealing tiles with the screen locked or another app open. Requires "Always" location. Off by default.'
+          index={0}
           control={
             <Switch
               value={bgEnabled}
@@ -172,6 +189,7 @@ export default function ProfileScreen() {
           sf="ruler"
           title="Units"
           subtitle={units === "mi" ? "Miles and square miles" : "Kilometers and square kilometers"}
+          index={1}
           control={
             <Switch
               value={units === "km"}
@@ -184,7 +202,8 @@ export default function ProfileScreen() {
 
       <View style={{ gap: 12 }}>
         <SectionHeader title="Privacy" />
-        <View
+        <Animated.View
+          entering={FadeInDown.duration(360).delay(staggerDelay(2, 70))}
           style={{
             backgroundColor: colors.surface,
             borderRadius: radius.md,
@@ -214,16 +233,20 @@ export default function ProfileScreen() {
               lineHeight: 19,
             }}
           >
-            Tiles are stored locally as coarse hexagon IDs. Trace has no
-            account, no server, and sends nothing anywhere in this version.
+            Tiles are stored locally as coarse hexagon IDs. Signing in is
+            optional — even then, only hexagon IDs ever sync, never your
+            precise location.
           </Text>
-        </View>
+        </Animated.View>
       </View>
 
-      <View style={{ gap: 12 }}>
+      <Animated.View
+        entering={FadeInDown.duration(360).delay(staggerDelay(3, 70))}
+        style={{ gap: 12 }}
+      >
         <SectionHeader title="Danger zone" />
         <PillButton label="Clear all data" variant="danger" onPress={confirmClear} />
-      </View>
+      </Animated.View>
 
       <Text
         style={{

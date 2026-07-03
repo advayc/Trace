@@ -1,6 +1,7 @@
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { colors, fonts, radius } from "@/constants/theme";
@@ -69,6 +70,7 @@ export function NeighborhoodPill({ position }: NeighborhoodPillProps) {
   if (!position || coverage == null) return null;
 
   return (
+    <Animated.View entering={FadeInDown.duration(420).delay(80).springify()}>
     <GlassCard borderRadius={radius.pill}>
       <View
         style={{
@@ -100,5 +102,6 @@ export function NeighborhoodPill({ position }: NeighborhoodPillProps) {
         </Text>
       </View>
     </GlassCard>
+    </Animated.View>
   );
 }

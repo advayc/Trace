@@ -1,8 +1,10 @@
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { colors, fonts, radius } from "@/constants/theme";
 import { formatCompact } from "@/lib/stats/format";
+import { staggerDelay } from "@/lib/motion/stagger";
 
 interface LeaderboardRowProps {
   rank: number;
@@ -12,6 +14,7 @@ interface LeaderboardRowProps {
   streak: number;
   hue: number;
   isYou?: boolean;
+  index?: number;
 }
 
 export function LeaderboardRow({
@@ -22,9 +25,11 @@ export function LeaderboardRow({
   streak,
   hue,
   isYou,
+  index = 0,
 }: LeaderboardRowProps) {
   return (
-    <View
+    <Animated.View
+      entering={FadeInRight.duration(360).delay(staggerDelay(index, 55))}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -107,6 +112,6 @@ export function LeaderboardRow({
           tiles
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }

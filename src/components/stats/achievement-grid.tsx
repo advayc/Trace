@@ -1,8 +1,10 @@
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 import { colors, fonts, radius } from "@/constants/theme";
 import { ACHIEVEMENTS } from "@/lib/achievements/definitions";
+import { staggerDelay } from "@/lib/motion/stagger";
 
 interface AchievementGridProps {
   unlockedIds: string[];
@@ -19,11 +21,12 @@ export function AchievementGrid({ unlockedIds }: AchievementGridProps) {
         gap: 12,
       }}
     >
-      {ACHIEVEMENTS.map((achievement) => {
+      {ACHIEVEMENTS.map((achievement, index) => {
         const isUnlocked = unlocked.has(achievement.id);
         return (
-          <View
+          <Animated.View
             key={achievement.id}
+            entering={FadeInUp.duration(360).delay(staggerDelay(index, 45))}
             style={{
               width: "30.5%",
               flexGrow: 1,
@@ -66,7 +69,7 @@ export function AchievementGrid({ unlockedIds }: AchievementGridProps) {
             >
               {achievement.title}
             </Text>
-          </View>
+          </Animated.View>
         );
       })}
     </View>

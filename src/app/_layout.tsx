@@ -11,10 +11,12 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { View } from "react-native";
 
 // Side effect: registers the background location task at module scope.
 import "@/lib/location/background-task";
+import { AnimatedSplash } from "@/components/ui/animated-splash";
 import { colors } from "@/constants/theme";
 import { getDb } from "@/lib/storage/tile-db";
 
@@ -31,6 +33,9 @@ export default function RootLayout() {
     DMSans_500Medium,
     DMSans_700Bold,
   });
+  const [splashVisible, setSplashVisible] = useState(true);
+
+  const onSplashFinish = useCallback(() => setSplashVisible(false), []);
 
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
@@ -39,20 +44,32 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
+          animation: "fade",
+          animationDuration: 280,
         }}
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="onboarding"
-          options={{ presentation: "fullScreenModal", gestureEnabled: false }}
+          options={{
+            presentation: "fullScreenModal",
+            gestureEnabled: false,
+            animation: "fade_from_bottom",
+            animationDuration: 360,
+          }}
+        />
+        <Stack.Screen
+          name="sign-in"
+          options={{ presentation: "modal", animation: "default" }}
         />
       </Stack>
-    </>
+      {splashVisible ? <AnimatedSplash onFinish={onSplashFinish} /> : null}
+    </View>
   );
 }

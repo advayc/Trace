@@ -1,12 +1,14 @@
 import { Image } from "expo-image";
 import { Linking, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { PillButton } from "@/components/ui/pill-button";
 import { colors, fonts } from "@/constants/theme";
 
 export function LocationDenied() {
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.duration(450)}
       style={{
         flex: 1,
         backgroundColor: colors.bg,
@@ -59,6 +61,6 @@ export function LocationDenied() {
         onPress={() => Linking.openSettings()}
         style={{ marginTop: 8, alignSelf: "stretch" }}
       />
-    </View>
+    </Animated.View>
   );
 }

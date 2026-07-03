@@ -1,5 +1,6 @@
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { colors, fonts, radius } from "@/constants/theme";
 
@@ -11,7 +12,8 @@ interface StreakRingProps {
 
 export function StreakRing({ current, best, todayActive }: StreakRingProps) {
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.duration(420).delay(60)}
       style={{
         backgroundColor: colors.surface,
         borderRadius: radius.lg,
@@ -82,6 +84,6 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
           Best: {best} {best === 1 ? "day" : "days"}
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }

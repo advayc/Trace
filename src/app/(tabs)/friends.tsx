@@ -1,5 +1,6 @@
 import { Image } from "expo-image";
 import { ScrollView, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { LeaderboardRow } from "@/components/friends/leaderboard-row";
 import { PillButton } from "@/components/ui/pill-button";
@@ -30,6 +31,7 @@ export default function FriendsScreen() {
       contentContainerStyle={{ padding: 20, gap: 20, paddingTop: 72 }}
     >
       <View style={{ gap: 4 }}>
+        <Animated.View entering={FadeInDown.duration(400)}>
         <Text
           style={{
             fontFamily: fonts.displayBold,
@@ -44,10 +46,12 @@ export default function FriendsScreen() {
         >
           Who's really stomped more ground?
         </Text>
+        </Animated.View>
       </View>
 
       {/* Coming-soon CTA — auth lands in Phase 2 */}
-      <View
+      <Animated.View
+        entering={FadeInDown.duration(400).delay(80)}
         style={{
           backgroundColor: colors.surfaceRaised,
           borderRadius: radius.lg,
@@ -82,7 +86,7 @@ export default function FriendsScreen() {
           sample explorers — your tile count is already real.
         </Text>
         <PillButton label="Sign in to compete — coming soon" onPress={() => {}} disabled />
-      </View>
+      </Animated.View>
 
       <View style={{ gap: 10 }}>
         {board.map((row, i) => (
@@ -95,6 +99,7 @@ export default function FriendsScreen() {
             streak={row.streak}
             hue={row.hue}
             isYou={row.isYou}
+            index={i}
           />
         ))}
       </View>

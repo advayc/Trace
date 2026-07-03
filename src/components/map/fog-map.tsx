@@ -3,8 +3,10 @@ import { Image } from "expo-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import MapView, { type Region } from "react-native-maps";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { FogHexLayer, RevealedHexLayer } from "@/components/map/hex-layers";
+import { MapSessionPill } from "@/components/map/map-session-pill";
 import { NeighborhoodPill } from "@/components/map/neighborhood-pill";
 import { RevealToast } from "@/components/map/reveal-toast";
 import { colors, radius } from "@/constants/theme";
@@ -172,21 +174,36 @@ export function FogMap() {
         }}
       />
 
-      {/* Top overlay: neighborhood pill */}
+      {/* Top overlay: session pill (left) + neighborhood pill (center) */}
       <View
+        pointerEvents="box-none"
         style={{
           position: "absolute",
           top: 64,
-          left: 0,
-          right: 0,
-          alignItems: "center",
+          left: 16,
+          right: 16,
         }}
       >
-        <NeighborhoodPill position={lastFix} />
+        <MapSessionPill sessionTiles={sessionNewTiles} />
+        <View
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+          }}
+        >
+          <NeighborhoodPill position={lastFix} />
+        </View>
       </View>
 
       {/* Bottom-right: recenter */}
-      <View style={{ position: "absolute", right: 16, bottom: 40, gap: 10 }}>
+      <Animated.View
+        entering={FadeIn.duration(360).delay(200)}
+        style={{ position: "absolute", right: 16, bottom: 40, gap: 10 }}
+      >
         <Pressable
           onPress={() => {
             setFollowUser(true);
@@ -212,7 +229,7 @@ export function FogMap() {
             tintColor={followUser ? colors.bg : colors.text}
           />
         </Pressable>
-      </View>
+      </Animated.View>
 
       {/* Bottom-center: reveal toast */}
       <View

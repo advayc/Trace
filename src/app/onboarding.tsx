@@ -8,7 +8,11 @@ import {
   View,
   type ViewToken,
 } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  LinearTransition,
+} from "react-native-reanimated";
 
 import { PillButton } from "@/components/ui/pill-button";
 import { colors, fonts, radius } from "@/constants/theme";
@@ -42,6 +46,75 @@ const SLIDES: Slide[] = [
     body: "Watch your coverage climb, keep daily streaks alive, and unlock achievements as the blank spots disappear.",
   },
 ];
+
+function OnboardingSlide({
+  item,
+  width,
+  active,
+}: {
+  item: Slide;
+  width: number;
+  active: boolean;
+}) {
+  return (
+    <View
+      style={{
+        width,
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 36,
+        gap: 26,
+      }}
+    >
+      <Animated.View
+        key={active ? `${item.key}-on` : `${item.key}-off`}
+        entering={active ? FadeInDown.duration(480).springify() : undefined}
+        style={{ alignItems: "center", gap: 26 }}
+      >
+        <View
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            backgroundColor: colors.emberDim,
+            borderWidth: 1,
+            borderColor: "rgba(232,160,76,0.35)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Image
+            source={`sf:${item.sf}`}
+            style={{ width: 52, height: 52 }}
+            tintColor={colors.ember}
+          />
+        </View>
+        <Text
+          style={{
+            fontFamily: fonts.displayBold,
+            fontSize: 36,
+            lineHeight: 42,
+            color: colors.text,
+            textAlign: "center",
+          }}
+        >
+          {item.title}
+        </Text>
+        <Text
+          style={{
+            fontFamily: fonts.body,
+            fontSize: 16,
+            lineHeight: 24,
+            color: colors.textMuted,
+            textAlign: "center",
+          }}
+        >
+          {item.body}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
 
 export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
@@ -84,68 +157,22 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged.current}
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
-        renderItem={({ item }) => (
-          <View
-            style={{
-              width,
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 36,
-              gap: 26,
-            }}
-          >
-            <Animated.View
-              entering={FadeInDown.duration(500)}
-              style={{
-                width: 120,
-                height: 120,
-                borderRadius: 60,
-                backgroundColor: colors.emberDim,
-                borderWidth: 1,
-                borderColor: "rgba(232,160,76,0.35)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Image
-                source={`sf:${item.sf}`}
-                style={{ width: 52, height: 52 }}
-                tintColor={colors.ember}
-              />
-            </Animated.View>
-            <Text
-              style={{
-                fontFamily: fonts.displayBold,
-                fontSize: 36,
-                lineHeight: 42,
-                color: colors.text,
-                textAlign: "center",
-              }}
-            >
-              {item.title}
-            </Text>
-            <Text
-              style={{
-                fontFamily: fonts.body,
-                fontSize: 16,
-                lineHeight: 24,
-                color: colors.textMuted,
-                textAlign: "center",
-              }}
-            >
-              {item.body}
-            </Text>
-          </View>
+        renderItem={({ item, index }) => (
+          <OnboardingSlide item={item} width={width} active={page === index} />
         )}
       />
 
-      <View style={{ padding: 28, gap: 20, paddingBottom: 52 }}>
+      <Animated.View
+        entering={FadeInUp.duration(500).delay(200)}
+        style={{ padding: 28, gap: 20, paddingBottom: 52 }}
+      >
         <View
           style={{ flexDirection: "row", justifyContent: "center", gap: 8 }}
         >
           {SLIDES.map((s, i) => (
-            <View
+            <Animated.View
               key={s.key}
+              layout={LinearTransition.springify()}
               style={{
                 width: i === page ? 22 : 8,
                 height: 8,
@@ -172,7 +199,7 @@ export default function OnboardingScreen() {
             Your precise location never leaves this device.
           </Text>
         ) : null}
-      </View>
+      </Animated.View>
     </View>
   );
 }
