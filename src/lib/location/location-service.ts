@@ -12,7 +12,31 @@ export function toGpsSample(location: Location.LocationObject): GpsSample {
   };
 }
 
+export type ForegroundTrackingMode = "passive" | "walk" | "run";
+
+const WATCH_OPTIONS: Record<
+  ForegroundTrackingMode,
+  Location.LocationOptions
+> = {
+  passive: {
+    accuracy: Location.Accuracy.High,
+    distanceInterval: 5,
+    timeInterval: 3000,
+  },
+  walk: {
+    accuracy: Location.Accuracy.High,
+    distanceInterval: 8,
+    timeInterval: 4000,
+  },
+  run: {
+    accuracy: Location.Accuracy.High,
+    distanceInterval: 5,
+    timeInterval: 2000,
+  },
+};
+
 let subscription: Location.LocationSubscription | null = null;
+let activeMode: ForegroundTrackingMode = "passive";
 const positionListeners = new Set<(loc: Location.LocationObject) => void>();
 
 export const locationService = {
@@ -26,14 +50,11 @@ export const locationService = {
     return status === "granted";
   },
 
-  async startForegroundWatch(): Promise<void> {
+  async startForegroundWatch(mode: ForegroundTrackingMode = "passive"): Promise<void> {
+    activeMode = mode;
     if (subscription) return;
     subscription = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.High,
-        distanceInterval: 5,
-        timeInterval: 3000,
-      },
+      WATCH_OPTIONS[mode],
       (location) => {
         stompEngine.processSample(toGpsSample(location));
         positionListeners.forEach((fn) => fn(location));
@@ -44,6 +65,14 @@ export const locationService = {
   stopForegroundWatch(): void {
     subscription?.remove();
     subscription = null;
+  },
+
+  async setForegroundMode(mode: ForegroundTrackingMode): Promise<void> {
+    if (mode === activeMode) return;
+    activeMode = mode;
+    if (!subscription) return;
+    this.stopForegroundWatch();
+    await this.startForegroundWatch(mode);
   },
 
   onPosition(listener: (loc: Location.LocationObject) => void): () => void {

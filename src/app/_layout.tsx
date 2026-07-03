@@ -14,7 +14,7 @@ import { View } from "react-native";
 // Side effect: registers the background location task at module scope.
 import "@/lib/location/background-task";
 import { AnimatedSplash } from "@/components/ui/animated-splash";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { getDb } from "@/lib/storage/tile-db";
 
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 getDb();
 
 export default function RootLayout() {
+  const { colors, scheme } = useTheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -41,7 +42,7 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <StatusBar style="light" />
+      <StatusBar style={scheme === "light" ? "dark" : "light"} />
       <Stack
         screenOptions={{
           headerShown: false,

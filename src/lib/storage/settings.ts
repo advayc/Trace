@@ -6,6 +6,7 @@ const listeners = new Map<string, Set<Listener>>();
 export const SETTINGS_KEYS = {
   onboarded: "trace.onboarded",
   units: "trace.units", // "mi" | "km"
+  colorScheme: "trace.colorScheme", // "dark" | "light"
   backgroundTracking: "trace.backgroundTracking",
   unlockedAchievements: "trace.unlockedAchievements", // string[] of ids
   deviceUserId: "trace.deviceUserId",

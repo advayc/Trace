@@ -1,7 +1,8 @@
 import { memo } from "react";
 import { Polygon } from "react-native-maps";
 
-import { heatColor, mapPalette } from "@/constants/theme";
+import { heatColor } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { cellPolygonCoords } from "@/lib/h3";
 import type { StompedTile } from "@/lib/storage/tile-db";
 
@@ -13,6 +14,8 @@ interface FogHexLayerProps {
 export const FogHexLayer = memo(function FogHexLayer({
   cells,
 }: FogHexLayerProps) {
+  const { mapPalette } = useTheme();
+
   return (
     <>
       {cells.map((index) => (
@@ -43,6 +46,8 @@ function withOpacity(hex: string, opacity: number): string {
 export const RevealedHexLayer = memo(function RevealedHexLayer({
   tiles,
 }: RevealedHexLayerProps) {
+  const { mapPalette } = useTheme();
+
   return (
     <>
       {tiles.map((tile) => (

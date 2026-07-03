@@ -8,7 +8,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface RevealToastProps {
   /** Bumps every time a new tile is revealed. */
@@ -18,6 +19,7 @@ interface RevealToastProps {
 
 /** Brief "+1 tile" flourish above the map controls on each reveal. */
 export function RevealToast({ revealCount, sessionTiles }: RevealToastProps) {
+  const { colors } = useTheme();
   const progress = useSharedValue(0);
 
   useEffect(() => {

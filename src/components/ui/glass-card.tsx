@@ -2,7 +2,8 @@ import { BlurView } from "expo-blur";
 import type { ReactNode } from "react";
 import { StyleProp, View, ViewStyle } from "react-native";
 
-import { colors, radius } from "@/constants/theme";
+import { radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface GlassCardProps {
   children: ReactNode;
@@ -17,6 +18,8 @@ export function GlassCard({
   contentStyle,
   borderRadius = radius.md,
 }: GlassCardProps) {
+  const { colors, scheme } = useTheme();
+
   return (
     <View
       style={[
@@ -30,7 +33,7 @@ export function GlassCard({
       ]}
     >
       <BlurView
-        tint="dark"
+        tint={scheme === "light" ? "light" : "dark"}
         intensity={40}
         style={[{ backgroundColor: colors.glassBg }, contentStyle]}
       >

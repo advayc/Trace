@@ -57,7 +57,7 @@ export function localDay(timestamp: number): string {
 
 export type StompResult =
   | { kind: "new"; tile: StompedTile }
-  | { kind: "revisit"; tile: StompedTile }
+  | { kind: "revisit"; tile: StompedTile; dormantMs: number }
   | { kind: "unchanged" };
 
 /** Revisits count at most once per cooldown window per tile. */
@@ -99,6 +99,7 @@ export const tileRepository = {
       return { kind: "unchanged" };
     }
 
+    const dormantMs = at - existing.last_stomped_at;
     database.runSync(
       "UPDATE stomped_tiles SET visit_count = visit_count + 1, last_stomped_at = ? WHERE h3_index = ?",
       [at, h3Index],
@@ -110,6 +111,7 @@ export const tileRepository = {
         visit_count: existing.visit_count + 1,
         last_stomped_at: at,
       }),
+      dormantMs,
     };
   },
 
@@ -233,6 +235,8 @@ export const tileRepository = {
 
   clearAll(): void {
     const database = getDb();
-    database.execSync("DELETE FROM stomped_tiles; DELETE FROM daily_stats;");
+    database.execSync(
+      "DELETE FROM stomped_tiles; DELETE FROM daily_stats; DELETE FROM activities; DELETE FROM segment_prs;",
+    );
   },
 };

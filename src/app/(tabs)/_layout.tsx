@@ -1,8 +1,10 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+
   return (
     <NativeTabs
       backgroundColor={colors.bg}

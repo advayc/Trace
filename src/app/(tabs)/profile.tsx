@@ -7,9 +7,10 @@ import { AccountRow } from "@/components/auth/account-row";
 import { PillButton } from "@/components/ui/pill-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
-import { colors, fonts, radius, spacing } from "@/constants/theme";
+import { fonts, radius, spacing } from "@/constants/theme";
 import { staggerDelay } from "@/lib/motion/stagger";
 import { useSetting } from "@/hooks/use-settings";
+import { useTheme } from "@/hooks/use-theme";
 import { resetAchievements } from "@/lib/achievements/achievement-service";
 import {
   isBackgroundTrackingActive,
@@ -34,6 +35,8 @@ function SettingRow({
   control: React.ReactNode;
   index?: number;
 }) {
+  const { colors } = useTheme();
+
   return (
     <Animated.View
       entering={FadeInDown.duration(360).delay(staggerDelay(index, 70))}
@@ -87,7 +90,7 @@ function SettingRow({
 }
 
 export default function ProfileScreen() {
-  const [units, setUnits] = useSetting<Units>(SETTINGS_KEYS.units, "mi");
+  const [units, setUnits] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const [bgEnabled, setBgEnabled] = useSetting(
     SETTINGS_KEYS.backgroundTracking,
     false,

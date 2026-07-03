@@ -4,14 +4,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import MapView, { type Region } from "react-native-maps";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FogHexLayer, RevealedHexLayer } from "@/components/map/hex-layers";
 import { MapSessionPill } from "@/components/map/map-session-pill";
 import { NeighborhoodPill } from "@/components/map/neighborhood-pill";
 import { RevealToast } from "@/components/map/reveal-toast";
-import { colors, radius } from "@/constants/theme";
+import { LiveStatsBar } from "@/components/activity/live-stats-bar";
+import { SessionControls } from "@/components/activity/session-controls";
+import { radius, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { useActivitySession } from "@/hooks/use-activity-session";
+import { activityRecorder } from "@/lib/activity/activity-recorder";
 import { cellsInBBox, estimateCellCount, type BoundingBox } from "@/lib/h3";
 import { locationService } from "@/lib/location/location-service";
+import { shareActivityCard, shareActivityFromMap } from "@/lib/share/capture-share-image";
+import { ActivityShareCard } from "@/lib/share/activity-share-card";
 import { tileRepository, type StompedTile } from "@/lib/storage/tile-db";
 import { stompEngine } from "@/lib/stomp/stomp-engine";
 import { useSessionStore } from "@/store/session-store";
@@ -37,13 +45,17 @@ function regionToBBox(region: Region): BoundingBox {
 }
 
 export function FogMap() {
+  const { colors, mapPalette, scheme } = useTheme();
+  const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
+  const shareCardRef = useRef<View>(null);
   const regionRef = useRef<Region>(FALLBACK_REGION);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [fogCells, setFogCells] = useState<string[]>([]);
   const [revealedTiles, setRevealedTiles] = useState<StompedTile[]>([]);
   const [revealCount, setRevealCount] = useState(0);
+  const { activeSession, latestActivity } = useActivitySession();
 
   const followUser = useSessionStore((s) => s.followUser);
   const setFollowUser = useSessionStore((s) => s.setFollowUser);
@@ -51,6 +63,8 @@ export function FogMap() {
   const incrementSessionTiles = useSessionStore((s) => s.incrementSessionTiles);
   const lastFix = useSessionStore((s) => s.lastFix);
   const setLastFix = useSessionStore((s) => s.setLastFix);
+
+  const tabBarClearance = insets.bottom + TAB_BAR_HEIGHT + 12;
 
   const recomputeLayers = useCallback(() => {
     const box = regionToBBox(regionRef.current);
@@ -65,7 +79,6 @@ export function FogMap() {
     );
 
     if (estimate > POLYGON_BUDGET) {
-      // Zoomed out past the fog budget: revealed tiles only.
       setFogCells([]);
       setRevealedTiles(revealed);
       return;
@@ -86,7 +99,28 @@ export function FogMap() {
     [recomputeLayers],
   );
 
-  // Live tile events: haptic + relayer + toast.
+  const startWalk = useCallback(() => {
+    activityRecorder.start("walk");
+  }, []);
+
+  const startRun = useCallback(() => {
+    activityRecorder.start("run");
+  }, []);
+
+  const stopSession = useCallback(() => {
+    activityRecorder.stop();
+  }, []);
+
+  const shareLatest = useCallback(() => {
+    const activity = activityRecorder.latestActivity();
+    if (!activity) return;
+    if (activity.route.length >= 2) {
+      shareActivityCard(shareCardRef, activity).catch(() => {});
+      return;
+    }
+    shareActivityFromMap(mapRef.current, activity).catch(() => {});
+  }, []);
+
   useEffect(() => {
     const offNew = stompEngine.on("tile:new", () => {
       if (process.env.EXPO_OS === "ios") {
@@ -103,7 +137,6 @@ export function FogMap() {
     };
   }, [incrementSessionTiles, recomputeLayers]);
 
-  // Track position for follow mode + pill.
   useEffect(() => {
     const unsubscribe = locationService.onPosition((location) => {
       const fix = {
@@ -118,7 +151,6 @@ export function FogMap() {
     return unsubscribe;
   }, [setLastFix]);
 
-  // Initial camera on the user, then first layer computation.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -152,7 +184,7 @@ export function FogMap() {
         style={{ flex: 1 }}
         initialRegion={FALLBACK_REGION}
         mapType="mutedStandard"
-        userInterfaceStyle="dark"
+        userInterfaceStyle={scheme === "light" ? "light" : "dark"}
         showsUserLocation
         showsMyLocationButton={false}
         showsPointsOfInterests={false}
@@ -164,45 +196,60 @@ export function FogMap() {
         <RevealedHexLayer tiles={revealedTiles} />
       </MapView>
 
-      {/* Atmosphere wash over the base map */}
       <View
         pointerEvents="none"
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: "rgba(12,14,18,0.16)",
+          backgroundColor: mapPalette.atmosphereWash,
         }}
       />
 
-      {/* Top overlay: session pill (left) + neighborhood pill (center) */}
+      {/* Top overlay: session pill (left) + neighborhood pill (center, no overlap) */}
       <View
         pointerEvents="box-none"
         style={{
           position: "absolute",
-          top: 64,
+          top: insets.top + 12,
           left: 16,
           right: 16,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          gap: 10,
         }}
       >
         <MapSessionPill sessionTiles={sessionNewTiles} />
-        <View
-          pointerEvents="box-none"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            alignItems: "center",
-          }}
-        >
+        <View style={{ flex: 1, alignItems: "center", minWidth: 0 }}>
           <NeighborhoodPill position={lastFix} />
         </View>
       </View>
 
-      {/* Bottom-right: recenter */}
+      {/* Bottom: session controls + live stats */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          left: 16,
+          right: 72,
+          bottom: tabBarClearance,
+          gap: 10,
+        }}
+      >
+        {activeSession ? <LiveStatsBar session={activeSession} /> : null}
+        <SessionControls
+          activeSession={activeSession}
+          latestActivity={latestActivity}
+          onStartWalk={startWalk}
+          onStartRun={startRun}
+          onStop={stopSession}
+          onShareLatest={shareLatest}
+        />
+      </View>
+
+      {/* Bottom-right: recenter — above tab bar, clear of controls column */}
       <Animated.View
         entering={FadeIn.duration(360).delay(200)}
-        style={{ position: "absolute", right: 16, bottom: 40, gap: 10 }}
+        style={{ position: "absolute", right: 16, bottom: tabBarClearance }}
       >
         <Pressable
           onPress={() => {
@@ -231,19 +278,30 @@ export function FogMap() {
         </Pressable>
       </Animated.View>
 
-      {/* Bottom-center: reveal toast */}
+      {/* Reveal toast — floats above controls */}
       <View
         pointerEvents="none"
         style={{
           position: "absolute",
-          bottom: 48,
-          left: 0,
-          right: 0,
+          bottom: tabBarClearance + (activeSession ? 168 : 120),
+          left: 16,
+          right: 16,
           alignItems: "center",
         }}
       >
         <RevealToast revealCount={revealCount} sessionTiles={sessionNewTiles} />
       </View>
+
+      {latestActivity && latestActivity.route.length >= 2 ? (
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", left: -9999, top: 0, opacity: 0 }}
+        >
+          <View ref={shareCardRef} collapsable={false}>
+            <ActivityShareCard activity={latestActivity} />
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

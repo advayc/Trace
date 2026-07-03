@@ -3,7 +3,8 @@ import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { GlassCard } from "@/components/ui/glass-card";
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { formatCompact } from "@/lib/stats/format";
 
 interface MapSessionPillProps {
@@ -12,6 +13,8 @@ interface MapSessionPillProps {
 
 /** Top-left walk session counter on the map. */
 export function MapSessionPill({ sessionTiles }: MapSessionPillProps) {
+  const { colors } = useTheme();
+
   return (
     <Animated.View entering={FadeInDown.duration(420).delay(120).springify()}>
       <GlassCard borderRadius={radius.pill}>
@@ -38,7 +41,7 @@ export function MapSessionPill({ sessionTiles }: MapSessionPillProps) {
           <Text
             style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}
           >
-            this walk
+            this session
           </Text>
         </View>
       </GlassCard>

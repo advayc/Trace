@@ -30,7 +30,7 @@ export default function MapScreen() {
       if (cancelled) return;
       setPermission(granted ? "granted" : "denied");
       if (granted) {
-        await locationService.startForegroundWatch();
+        await locationService.startForegroundWatch("passive");
         setTracking(true);
       }
     })();

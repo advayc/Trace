@@ -1,6 +1,7 @@
 import { ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { ActivityHistoryRow } from "@/components/activity/activity-history-row";
 import { ActivityHeatmap } from "@/components/stats/activity-heatmap";
 import { AchievementGrid } from "@/components/stats/achievement-grid";
 import { StatCard } from "@/components/stats/stat-card";
@@ -10,9 +11,11 @@ import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
 import { colors, spacing } from "@/constants/theme";
 import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
+import { useActivityHistory } from "@/hooks/use-activity-history";
 import { useSetting } from "@/hooks/use-settings";
 import { useStats } from "@/hooks/use-stats";
 import { ACHIEVEMENTS } from "@/lib/achievements/definitions";
+import { shareActivityFromMap } from "@/lib/share/capture-share-image";
 import {
   formatArea,
   formatCompact,
@@ -24,7 +27,8 @@ import { SETTINGS_KEYS } from "@/lib/storage/settings";
 
 export default function ProgressScreen() {
   const stats = useStats();
-  const [units] = useSetting<Units>(SETTINGS_KEYS.units, "mi");
+  const activityHistory = useActivityHistory(8);
+  const [units] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const { unlockedIds } = useAchievementUnlocks();
 
   return (
@@ -56,6 +60,22 @@ export default function ProgressScreen() {
       <ActivityHeatmap />
 
       <TileIntensityGrid />
+
+      {activityHistory.length > 0 ? (
+        <View style={{ gap: 10 }}>
+          <SectionHeader title="Recent activities" subtitle="Walks and runs on Trace" />
+          {activityHistory.map((activity, i) => (
+            <ActivityHistoryRow
+              key={activity.id}
+              activity={activity}
+              index={i}
+              onShare={(a) => {
+                shareActivityFromMap(null, a).catch(() => {});
+              }}
+            />
+          ))}
+        </View>
+      ) : null}
 
       <Animated.View
         entering={FadeInDown.duration(380).delay(staggerDelay(1, 60))}

@@ -6,9 +6,15 @@ import {
   type SampleVerdict,
 } from "@/lib/stomp/stomp-rules";
 
+export interface RevisitEvent {
+  tile: StompedTile;
+  dormantMs: number;
+}
+
 export interface StompEvents {
+  "sample:accepted": { sample: GpsSample; distanceM: number };
   "tile:new": StompedTile;
-  "tile:revisit": StompedTile;
+  "tile:revisit": RevisitEvent;
   "stats:changed": undefined;
 }
 
@@ -22,6 +28,7 @@ type Handler<K extends EventKey> = (payload: StompEvents[K]) => void;
 class StompEngine {
   private lastAccepted: GpsSample | null = null;
   private handlers: { [K in EventKey]: Set<Handler<K>> } = {
+    "sample:accepted": new Set(),
     "tile:new": new Set(),
     "tile:revisit": new Set(),
     "stats:changed": new Set(),
@@ -44,6 +51,7 @@ class StompEngine {
     if (verdict.distanceM > 0) {
       tileRepository.addDistance(verdict.distanceM, sample.timestamp);
     }
+    this.emit("sample:accepted", { sample, distanceM: verdict.distanceM });
 
     const h3Index = pointToCell(sample.lat, sample.lng);
     const center = cellCenter(h3Index);
@@ -55,7 +63,12 @@ class StompEngine {
     );
 
     if (result.kind === "new") this.emit("tile:new", result.tile);
-    if (result.kind === "revisit") this.emit("tile:revisit", result.tile);
+    if (result.kind === "revisit") {
+      this.emit("tile:revisit", {
+        tile: result.tile,
+        dormantMs: result.dormantMs,
+      });
+    }
     this.emit("stats:changed", undefined);
     return verdict;
   }

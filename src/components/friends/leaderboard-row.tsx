@@ -11,7 +11,7 @@ interface LeaderboardRowProps {
   name: string;
   initials: string;
   tiles: number;
-  streak: number;
+  streak?: number;
   hue: number;
   isYou?: boolean;
   index?: number;
@@ -79,12 +79,24 @@ export function LeaderboardRow({
           {name}
           {isYou ? "  · you" : ""}
         </Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Image
-            source="sf:flame.fill"
-            style={{ width: 11, height: 11 }}
-            tintColor={colors.mint}
-          />
+        {typeof streak === "number" ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Image
+              source="sf:flame.fill"
+              style={{ width: 11, height: 11 }}
+              tintColor={colors.mint}
+            />
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 13,
+                color: colors.textMuted,
+              }}
+            >
+              {streak} day streak
+            </Text>
+          </View>
+        ) : (
           <Text
             style={{
               fontFamily: fonts.body,
@@ -92,9 +104,9 @@ export function LeaderboardRow({
               color: colors.textMuted,
             }}
           >
-            {streak} day streak
+            connected
           </Text>
-        </View>
+        )}
       </View>
       <View style={{ alignItems: "flex-end", gap: 2 }}>
         <Text

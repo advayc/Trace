@@ -18,6 +18,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Trace reveals map tiles as you walk. Your precise location stays on your device.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Keep revealing tiles when the screen is locked during a walk. Optional, off by default.",
+        "NSHealthShareUsageDescription": "Trace can read step counts to enrich your activity stats.",
+        "NSHealthUpdateUsageDescription": "Trace can save completed walks and runs to Apple Health.",
         "UIBackgroundModes": [
           "location"
         ]
@@ -76,12 +78,19 @@
         {
           "ios": {
             "extraPods": [
-              { "name": "GoogleUtilities", "modular_headers": true },
-              { "name": "RecaptchaInterop", "modular_headers": true }
+              {
+                "name": "GoogleUtilities",
+                "modular_headers": true
+              },
+              {
+                "name": "RecaptchaInterop",
+                "modular_headers": true
+              }
             ]
           }
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

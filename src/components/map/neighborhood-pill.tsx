@@ -4,7 +4,8 @@ import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { GlassCard } from "@/components/ui/glass-card";
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { estimateCellCount, type BoundingBox } from "@/lib/h3";
 import { formatPercent } from "@/lib/stats/format";
 import { coverageFraction } from "@/lib/stats/stats-service";
@@ -19,6 +20,7 @@ interface NeighborhoodPillProps {
 }
 
 export function NeighborhoodPill({ position }: NeighborhoodPillProps) {
+  const { colors } = useTheme();
   const [name, setName] = useState<string | null>(null);
   const [coverage, setCoverage] = useState<number | null>(null);
   const lastGeocodeAt = useRef(0);
@@ -70,7 +72,10 @@ export function NeighborhoodPill({ position }: NeighborhoodPillProps) {
   if (!position || coverage == null) return null;
 
   return (
-    <Animated.View entering={FadeInDown.duration(420).delay(80).springify()}>
+    <Animated.View
+      entering={FadeInDown.duration(420).delay(80).springify()}
+      style={{ maxWidth: "100%" }}
+    >
     <GlassCard borderRadius={radius.pill}>
       <View
         style={{
