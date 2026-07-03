@@ -1,6 +1,83 @@
-/** Matte charcoal (dark) and paper (light) palettes — terracotta accent, Inter typography. */
+/** Matte charcoal (dark) and paper (light) palettes — accent color is user-configurable. */
 
 export type ColorScheme = "dark" | "light";
+
+export type AccentPreset =
+  | "ember"
+  | "lavender"
+  | "green"
+  | "blue"
+  | "red"
+  | "yellow";
+
+export const ACCENT_PRESET_LABELS: Record<AccentPreset, string> = {
+  ember: "Ember",
+  lavender: "Lavender",
+  green: "Green",
+  blue: "Blue",
+  red: "Red",
+  yellow: "Yellow",
+};
+
+type AccentTokens = {
+  readonly ember: string;
+  readonly emberLight: string;
+  readonly emberDim: string;
+  readonly accentBorder: string;
+  readonly heatStops: readonly string[];
+  readonly mapRevealedStroke: string;
+};
+
+export const ACCENT_TOKENS: Record<AccentPreset, AccentTokens> = {
+  ember: {
+    ember: "#E8A04C",
+    emberLight: "#F5C882",
+    emberDim: "rgba(232,160,76,0.16)",
+    accentBorder: "rgba(232,160,76,0.42)",
+    heatStops: ["#E8A04C", "#D98C35", "#C7741B", "#B35D0E"],
+    mapRevealedStroke: "rgba(232,160,76,0.4)",
+  },
+  lavender: {
+    ember: "#9B87F5",
+    emberLight: "#B4A6FF",
+    emberDim: "rgba(155,135,245,0.16)",
+    accentBorder: "rgba(155,135,245,0.42)",
+    heatStops: ["#9B87F5", "#8B78E8", "#7B69DB", "#6B5ACE"],
+    mapRevealedStroke: "rgba(180,166,255,0.42)",
+  },
+  green: {
+    ember: "#34D399",
+    emberLight: "#6EE7B7",
+    emberDim: "rgba(52,211,153,0.14)",
+    accentBorder: "rgba(52,211,153,0.38)",
+    heatStops: ["#34D399", "#2DB88A", "#26A07B", "#1F886C"],
+    mapRevealedStroke: "rgba(110,231,183,0.40)",
+  },
+  blue: {
+    ember: "#60A5FA",
+    emberLight: "#93C5FD",
+    emberDim: "rgba(96,165,250,0.14)",
+    accentBorder: "rgba(96,165,250,0.38)",
+    heatStops: ["#60A5FA", "#5294E8", "#4483D6", "#3672C4"],
+    mapRevealedStroke: "rgba(147,197,253,0.40)",
+  },
+  red: {
+    ember: "#F87171",
+    emberLight: "#FCA5A5",
+    emberDim: "rgba(248,113,113,0.14)",
+    accentBorder: "rgba(248,113,113,0.38)",
+    heatStops: ["#F87171", "#E86565", "#D85959", "#C84D4D"],
+    mapRevealedStroke: "rgba(252,165,165,0.40)",
+  },
+  yellow: {
+    ember: "#FBBF24",
+    emberLight: "#FCD34D",
+    emberDim: "rgba(251,191,36,0.16)",
+    accentBorder: "rgba(251,191,36,0.42)",
+    heatStops: ["#FBBF24", "#E8B020", "#D5A11C", "#C29218"],
+    mapRevealedStroke: "rgba(252,211,77,0.42)",
+  },
+};
 
 export type ThemeColors = {
   readonly bg: string;
@@ -36,7 +113,7 @@ export type MapPalette = {
   readonly atmosphereWash: string;
 };
 
-const darkColors: ThemeColors = {
+const darkBase = {
   bg: "#121212",
   surface: "#181818",
   surfaceRaised: "#1E1E1E",
@@ -45,10 +122,6 @@ const darkColors: ThemeColors = {
   borderStrong: "#333333",
   buttonLight: "#F4F4F5",
   buttonLightText: "#121212",
-  ember: "#C8533C",
-  emberLight: "#D97058",
-  emberDim: "rgba(200,83,60,0.14)",
-  accentBorder: "rgba(200,83,60,0.38)",
   mint: "#D4D4D4",
   mintLight: "#E5E5E5",
   mintDim: "rgba(255,255,255,0.06)",
@@ -60,9 +133,9 @@ const darkColors: ThemeColors = {
   dangerDim: "rgba(239,68,68,0.12)",
   overlay: "rgba(0,0,0,0.82)",
   glassBg: "rgba(24,24,24,0.72)",
-};
+} as const;
 
-const lightColors: ThemeColors = {
+const lightBase = {
   bg: "#F5F5F4",
   surface: "#FFFFFF",
   surfaceRaised: "#FAFAFA",
@@ -71,10 +144,6 @@ const lightColors: ThemeColors = {
   borderStrong: "#A3A3A3",
   buttonLight: "#F4F4F5",
   buttonLightText: "#121212",
-  ember: "#C8533C",
-  emberLight: "#B84A34",
-  emberDim: "rgba(200,83,60,0.12)",
-  accentBorder: "rgba(200,83,60,0.32)",
   mint: "#525252",
   mintLight: "#404040",
   mintDim: "rgba(0,0,0,0.04)",
@@ -86,33 +155,57 @@ const lightColors: ThemeColors = {
   dangerDim: "rgba(220,38,38,0.10)",
   overlay: "rgba(255,255,255,0.88)",
   glassBg: "rgba(255,255,255,0.78)",
-};
+} as const;
 
-const darkMapPalette: MapPalette = {
+const darkMapBase = {
   fogFill: "rgba(18,18,18,0.90)",
   fogStroke: "rgba(255,255,255,0.04)",
   revealedOpacity: 0.52,
-  revealedStroke: "rgba(217,112,88,0.38)",
   atmosphereWash: "rgba(12,14,18,0.16)",
-};
+} as const;
 
-const lightMapPalette: MapPalette = {
+const lightMapBase = {
   fogFill: "rgba(231,229,228,0.92)",
   fogStroke: "rgba(0,0,0,0.06)",
   revealedOpacity: 0.48,
-  revealedStroke: "rgba(200,83,60,0.42)",
   atmosphereWash: "rgba(245,245,244,0.22)",
-};
+} as const;
+
+function buildColors(
+  base: typeof darkBase | typeof lightBase,
+  accent: AccentTokens,
+): ThemeColors {
+  return {
+    ...base,
+    ember: accent.ember,
+    emberLight: accent.emberLight,
+    emberDim: accent.emberDim,
+    accentBorder: accent.accentBorder,
+  };
+}
+
+function buildMapPalette(
+  base: typeof darkMapBase | typeof lightMapBase,
+  accent: AccentTokens,
+): MapPalette {
+  return {
+    ...base,
+    revealedStroke: accent.mapRevealedStroke,
+  };
+}
 
 /** Default export for non-reactive contexts (share cards, splash). */
-export const colors = darkColors;
-export const mapPalette = darkMapPalette;
+export const colors = buildColors(darkBase, ACCENT_TOKENS.ember);
+export const mapPalette = buildMapPalette(darkMapBase, ACCENT_TOKENS.ember);
 
-export function getTheme(scheme: ColorScheme) {
+export function getTheme(scheme: ColorScheme, accentPreset: AccentPreset = "ember") {
+  const accent = ACCENT_TOKENS[accentPreset];
   return {
     scheme,
-    colors: scheme === "light" ? lightColors : darkColors,
-    mapPalette: scheme === "light" ? lightMapPalette : darkMapPalette,
+    accentPreset,
+    colors: buildColors(scheme === "light" ? lightBase : darkBase, accent),
+    mapPalette: buildMapPalette(scheme === "light" ? lightMapBase : darkMapBase, accent),
+    heatStops: accent.heatStops,
   };
 }
 
@@ -140,13 +233,16 @@ export const spacing = {
   card: 14,
 } as const;
 
-const HEAT_STOPS = ["#C8533C", "#B84A34", "#A8422E", "#963828"] as const;
+const HEAT_STOPS = ACCENT_TOKENS.ember.heatStops;
 
-export function heatColor(visitCount: number): string {
-  if (visitCount <= 1) return HEAT_STOPS[0];
-  if (visitCount <= 3) return HEAT_STOPS[1];
-  if (visitCount <= 7) return HEAT_STOPS[2];
-  return HEAT_STOPS[3];
+export function heatColor(
+  visitCount: number,
+  stops: readonly string[] = HEAT_STOPS,
+): string {
+  if (visitCount <= 1) return stops[0]!;
+  if (visitCount <= 3) return stops[1]!;
+  if (visitCount <= 7) return stops[2]!;
+  return stops[3]!;
 }
 
 /** Native tab bar content height (liquid glass tabs sit above home indicator). */

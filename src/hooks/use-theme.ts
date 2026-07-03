@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { getTheme, type ColorScheme } from "@/constants/theme";
+import { getTheme, type AccentPreset, type ColorScheme } from "@/constants/theme";
 import { SETTINGS_KEYS, settings } from "@/lib/storage/settings";
 
 export function useTheme() {
@@ -10,9 +10,19 @@ export function useTheme() {
     () => "dark" as ColorScheme,
   );
 
+  const accentPreset = useSyncExternalStore(
+    (cb) => settings.subscribe(SETTINGS_KEYS.accentPreset, cb),
+    () => settings.get<AccentPreset>(SETTINGS_KEYS.accentPreset, "ember"),
+    () => "ember" as AccentPreset,
+  );
+
   const setColorScheme = (next: ColorScheme) => {
     settings.set(SETTINGS_KEYS.colorScheme, next);
   };
 
-  return { ...getTheme(scheme), setColorScheme };
+  const setAccentPreset = (next: AccentPreset) => {
+    settings.set(SETTINGS_KEYS.accentPreset, next);
+  };
+
+  return { ...getTheme(scheme, accentPreset), setColorScheme, setAccentPreset };
 }

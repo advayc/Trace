@@ -7,6 +7,7 @@ export const SETTINGS_KEYS = {
   onboarded: "trace.onboarded",
   units: "trace.units", // "mi" | "km"
   colorScheme: "trace.colorScheme", // "dark" | "light"
+  accentPreset: "trace.accentPreset", // AccentPreset
   backgroundTracking: "trace.backgroundTracking",
   unlockedAchievements: "trace.unlockedAchievements", // string[] of ids
   deviceUserId: "trace.deviceUserId",

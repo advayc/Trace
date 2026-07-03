@@ -55,7 +55,7 @@ export const RevealedHexLayer = memo(function RevealedHexLayer({
           key={tile.h3Index}
           coordinates={cellPolygonCoords(tile.h3Index)}
           fillColor={withOpacity(
-            heatColor(tile.visitCount),
+            heatColor(tile.visitCount, heatStops),
             mapPalette.revealedOpacity,
           )}
           strokeColor={mapPalette.revealedStroke}
