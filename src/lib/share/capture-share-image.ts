@@ -4,22 +4,29 @@ import { Share, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 
 import type { Activity } from "@/lib/activity/activity-types";
-import { formatDuration, formatPace } from "@/lib/activity/activity-format";
+import {
+  formatDistanceKm,
+  formatDuration,
+  formatPace,
+} from "@/lib/activity/activity-format";
 import { ACTIVITY_SHARE_CARD_SIZE } from "@/lib/share/activity-share-card";
 
-function formatDistanceKm(distanceM: number): string {
-  return `${(distanceM / 1000).toFixed(2)} km`;
-}
+const MAP_CAPTURE_DELAY_MS = 900;
 
 function shareMessage(activity: Activity): string {
   const title = activity.type === "run" ? "Trace run" : "Trace walk";
   return `${title}\n${formatDistanceKm(activity.distanceM)} in ${formatDuration(activity.durationMs)}\nPace ${formatPace(activity.avgPaceSPerKm)}\n+${activity.newTiles} new tiles`;
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** Capture a mounted share card and open the system share sheet. */
 export async function shareActivityCard(
   cardRef: RefObject<View | null>,
   activity: Activity,
+  options?: { mapReady?: boolean },
 ): Promise<void> {
   const title = activity.type === "run" ? "Trace run" : "Trace walk";
   const message = shareMessage(activity);
@@ -27,6 +34,10 @@ export async function shareActivityCard(
   if (!cardRef.current) {
     await Share.share({ message, title });
     return;
+  }
+
+  if (activity.route.length >= 2 && !options?.mapReady) {
+    await wait(MAP_CAPTURE_DELAY_MS);
   }
 
   try {

@@ -1,7 +1,8 @@
 import * as Crypto from "expo-crypto";
 
+import { paceSecondsPerKm } from "@/lib/activity/activity-format";
 import { activityRepository } from "@/lib/activity/activity-repository";
-import { simplifyRoute } from "@/lib/activity/route-simplify";
+import { routeDistanceM, simplifyRoute } from "@/lib/activity/route-simplify";
 import type {
   ActiveSession,
   Activity,
@@ -81,9 +82,9 @@ class ActivityRecorder {
 
     const endedAt = Date.now();
     const durationMs = endedAt - this.session.startedAt;
-    const distanceM = this.session.distanceM;
-    const avgPaceSPerKm =
-      distanceM > 0 ? (durationMs / 1000 / distanceM) * 1000 : null;
+    const routeDistance = routeDistanceM(this.route);
+    const distanceM = Math.max(this.session.distanceM, routeDistance);
+    const avgPaceSPerKm = paceSecondsPerKm(distanceM, durationMs);
 
     const activity: Activity = {
       id: this.session.id,
@@ -117,10 +118,7 @@ class ActivityRecorder {
     this.tickTimer = setInterval(() => {
       if (!this.session) return;
       const durationMs = Date.now() - this.session.startedAt;
-      const avgPaceSPerKm =
-        this.session.distanceM > 0
-          ? (durationMs / 1000 / this.session.distanceM) * 1000
-          : null;
+      const avgPaceSPerKm = paceSecondsPerKm(this.session.distanceM, durationMs);
       this.session = { ...this.session, durationMs, avgPaceSPerKm };
       this.emit("session:updated", { ...this.session });
     }, 1000);

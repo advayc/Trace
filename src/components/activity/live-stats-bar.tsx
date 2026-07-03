@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { fonts, radius } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import type { ActiveSession } from "@/lib/activity/activity-types";
-import { formatDuration, formatPace } from "@/lib/activity/activity-format";
+import { formatDistanceKm, formatDuration, formatPace } from "@/lib/activity/activity-format";
 
 function Stat({ label, value }: { label: string; value: string }) {
   const { colors } = useTheme();
@@ -32,7 +32,7 @@ export function LiveStatsBar({ session }: { session: ActiveSession }) {
       }}
     >
       <Stat label="time" value={formatDuration(session.durationMs)} />
-      <Stat label="distance" value={`${(session.distanceM / 1000).toFixed(2)} km`} />
+      <Stat label="distance" value={formatDistanceKm(session.distanceM)} />
       <Stat label="pace" value={formatPace(session.avgPaceSPerKm)} />
       <Stat label="new" value={String(session.newTiles)} />
     </View>

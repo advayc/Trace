@@ -1,6 +1,9 @@
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+
 import {
   parseAvatar,
   serializeAvatar,
+  isRemoteAvatarUrl,
   type AvatarPreset,
 } from "@/lib/auth/avatar-presets";
 import { supabase } from "@/lib/supabase/client";
@@ -49,4 +52,24 @@ export async function updateProfile(
       data: { full_name: patch.displayName.trim() || undefined },
     });
   }
+}
+
+/** Persist Google/Apple profile photo from OAuth metadata when the user has no custom avatar. */
+export async function syncOAuthAvatarFromMetadata(
+  supabaseUser: SupabaseUser,
+): Promise<void> {
+  const meta = supabaseUser.user_metadata ?? {};
+  const picture =
+    (meta.avatar_url as string | undefined) ??
+    (meta.picture as string | undefined);
+  if (!isRemoteAvatarUrl(picture)) return;
+
+  const existing = await fetchProfile(supabaseUser.id);
+  if (existing?.avatarUrl && !isRemoteAvatarUrl(existing.avatarUrl)) return;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: picture })
+    .eq("id", supabaseUser.id);
+  if (error) throw error;
 }

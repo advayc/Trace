@@ -17,6 +17,7 @@ import { radius, TAB_BAR_HEIGHT } from "@/constants/theme";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useTheme } from "@/hooks/use-theme";
 import { useActivitySession } from "@/hooks/use-activity-session";
+import { useActivityShareCard } from "@/hooks/use-activity-share-card";
 import { activityRecorder } from "@/lib/activity/activity-recorder";
 import {
   fetchFriendTilesInCells,
@@ -25,8 +26,6 @@ import {
 } from "@/lib/friends/friends-service";
 import { cellsInBBox, estimateCellCount, type BoundingBox } from "@/lib/h3";
 import { locationService } from "@/lib/location/location-service";
-import { shareActivityCard, shareActivityFromMap } from "@/lib/share/capture-share-image";
-import { ActivityShareCard } from "@/lib/share/activity-share-card";
 import { tileRepository, type StompedTile } from "@/lib/storage/tile-db";
 import { stompEngine } from "@/lib/stomp/stomp-engine";
 import { useSessionStore } from "@/store/session-store";
@@ -55,7 +54,7 @@ export function FogMap() {
   const { colors, mapPalette, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
-  const shareCardRef = useRef<View>(null);
+  const { share: shareActivity, hiddenCard } = useActivityShareCard();
   const regionRef = useRef<Region>(FALLBACK_REGION);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -167,12 +166,8 @@ export function FogMap() {
   const shareLatest = useCallback(() => {
     const activity = activityRecorder.latestActivity();
     if (!activity) return;
-    if (activity.route.length >= 2) {
-      shareActivityCard(shareCardRef, activity).catch(() => {});
-      return;
-    }
-    shareActivityFromMap(mapRef.current, activity).catch(() => {});
-  }, []);
+    shareActivity(activity, mapRef.current);
+  }, [shareActivity]);
 
   useEffect(() => {
     const offNew = stompEngine.on("tile:new", () => {
@@ -351,16 +346,7 @@ export function FogMap() {
         <RevealToast revealCount={revealCount} sessionTiles={sessionNewTiles} />
       </View>
 
-      {latestActivity && latestActivity.route.length >= 2 ? (
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", left: -9999, top: 0, opacity: 0 }}
-        >
-          <View ref={shareCardRef} collapsable={false}>
-            <ActivityShareCard activity={latestActivity} />
-          </View>
-        </View>
-      ) : null}
+      {hiddenCard}
     </View>
   );
 }

@@ -9,6 +9,7 @@ import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 
 import { SignInCancelledError } from "@/lib/auth/errors";
+import { syncOAuthAvatarFromMetadata } from "@/lib/auth/profile-service";
 import { supabase } from "@/lib/supabase/client";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -53,17 +54,19 @@ export async function completeSessionFromCallbackUrl(url: string): Promise<void>
   }
 
   if (params.code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(params.code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(params.code);
     if (error) throw error;
+    if (data.user) await syncOAuthAvatarFromMetadata(data.user);
     return;
   }
 
   if (params.access_token && params.refresh_token) {
-    const { error } = await supabase.auth.setSession({
+    const { data, error } = await supabase.auth.setSession({
       access_token: params.access_token,
       refresh_token: params.refresh_token,
     });
     if (error) throw error;
+    if (data.user) await syncOAuthAvatarFromMetadata(data.user);
     return;
   }
 

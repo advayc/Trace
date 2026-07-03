@@ -11,7 +11,12 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { SignInCancelledError } from "@/lib/auth/errors";
 import { parseAvatar, serializeAvatar } from "@/lib/auth/avatar-presets";
 import { signInWithGoogleOAuth } from "@/lib/auth/google-oauth";
-import { fetchProfile, updateProfile, type Profile } from "@/lib/auth/profile-service";
+import {
+  fetchProfile,
+  syncOAuthAvatarFromMetadata,
+  updateProfile,
+  type Profile,
+} from "@/lib/auth/profile-service";
 import type { AuthProvider, User } from "@/lib/auth/types";
 import { supabase } from "@/lib/supabase/client";
 
@@ -26,7 +31,9 @@ function toUser(supabaseUser: SupabaseUser, profile?: Profile | null): User {
     (meta.name as string | undefined) ??
     supabaseUser.email?.split("@")[0] ??
     null;
-  const avatarUrl = profile?.avatarUrl ?? null;
+  const metaPicture =
+    (meta.avatar_url as string | undefined) ?? (meta.picture as string | undefined);
+  const avatarUrl = profile?.avatarUrl ?? metaPicture ?? null;
 
   const rawProvider = supabaseUser.app_metadata?.provider;
   const provider: User["provider"] =
@@ -105,9 +112,12 @@ export const authService: AuthProvider = {
   async signInWithGoogle(): Promise<User> {
     // Browser OAuth avoids the native ID-token nonce mismatch with Supabase.
     await signInWithGoogleOAuth();
-    const user = await userFromSession();
-    if (!user) throw new Error("Google sign-in failed. Try again.");
-    return user;
+    const { data } = await supabase.auth.getSession();
+    const supabaseUser = data.session?.user;
+    if (!supabaseUser) throw new Error("Google sign-in failed. Try again.");
+    await syncOAuthAvatarFromMetadata(supabaseUser);
+    const profile = await fetchProfile(supabaseUser.id);
+    return toUser(supabaseUser, profile);
   },
 
   async signInWithEmail(email: string, password: string): Promise<User> {

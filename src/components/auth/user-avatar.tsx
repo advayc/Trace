@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { fonts } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import {
+  isRemoteAvatarUrl,
   parseAvatar,
   type AvatarPreset,
 } from "@/lib/auth/avatar-presets";
@@ -24,7 +25,24 @@ export function UserAvatar({
   const { colors } = useTheme();
   const avatar = avatarProp ?? parseAvatar(avatarUrl);
   const radius = size / 2;
-  const initials = initialsFor(displayName);
+  const remotePhoto = isRemoteAvatarUrl(avatarUrl) ? avatarUrl : null;
+
+  if (remotePhoto) {
+    return (
+      <Image
+        source={{ uri: remotePhoto }}
+        contentFit="cover"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: radius,
+          borderWidth: 1,
+          borderColor: colors.borderStrong,
+          backgroundColor: colors.surface,
+        }}
+      />
+    );
+  }
 
   return (
     <View
@@ -44,7 +62,7 @@ export function UserAvatar({
         style={{ width: size * 0.38, height: size * 0.38 }}
         tintColor={`hsl(${avatar.hue}, 68%, 72%)`}
       />
-      {initials ? (
+      {initialsFor(displayName) ? (
         <Text
           style={{
             position: "absolute",
@@ -54,7 +72,7 @@ export function UserAvatar({
             color: colors.text,
           }}
         >
-          {initials}
+          {initialsFor(displayName)}
         </Text>
       ) : null}
     </View>

@@ -13,10 +13,10 @@ import { spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
 import { useActivityHistory } from "@/hooks/use-activity-history";
+import { useActivityShareCard } from "@/hooks/use-activity-share-card";
 import { useSetting } from "@/hooks/use-settings";
 import { useStats } from "@/hooks/use-stats";
 import { ACHIEVEMENTS } from "@/lib/achievements/definitions";
-import { shareActivityFromMap } from "@/lib/share/capture-share-image";
 import {
   formatArea,
   formatCompact,
@@ -32,9 +32,11 @@ export default function ProgressScreen() {
   const activityHistory = useActivityHistory(8);
   const [units] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const { unlockedIds } = useAchievementUnlocks();
+  const { share, hiddenCard } = useActivityShareCard();
 
   return (
-    <ScrollView
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{
@@ -72,7 +74,7 @@ export default function ProgressScreen() {
               activity={activity}
               index={i}
               onShare={(a) => {
-                shareActivityFromMap(null, a).catch(() => {});
+                share(a);
               }}
             />
           ))}
@@ -117,6 +119,8 @@ export default function ProgressScreen() {
         />
         <AchievementGrid unlockedIds={unlockedIds} />
       </View>
-    </ScrollView>
+      </ScrollView>
+      {hiddenCard}
+    </View>
   );
 }

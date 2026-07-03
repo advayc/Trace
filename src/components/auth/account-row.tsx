@@ -124,6 +124,7 @@ export function AccountRow() {
           <View>
             <UserAvatar
               displayName={displayName}
+              avatarUrl={user.avatarUrl}
               avatar={user.avatar}
               size={64}
             />

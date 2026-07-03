@@ -4,7 +4,7 @@ import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { colors, fonts, radius } from "@/constants/theme";
 import type { Activity } from "@/lib/activity/activity-types";
-import { formatDuration, formatPace } from "@/lib/activity/activity-format";
+import { formatDistanceKm, formatDuration, formatPace } from "@/lib/activity/activity-format";
 import { staggerDelay } from "@/lib/motion/stagger";
 import { formatCompact } from "@/lib/stats/format";
 
@@ -59,7 +59,7 @@ export function ActivityHistoryRow({
             {label} · {date}
           </Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>
-            {(activity.distanceM / 1000).toFixed(2)} km · {formatDuration(activity.durationMs)} ·{" "}
+            {formatDistanceKm(activity.distanceM)} · {formatDuration(activity.durationMs)} ·{" "}
             {formatPace(activity.avgPaceSPerKm)}
           </Text>
         </View>

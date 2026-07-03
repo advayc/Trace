@@ -23,12 +23,16 @@ export const AVATAR_ICONS = [
 
 export const AVATAR_HUES = [12, 24, 45, 142, 195, 210, 260, 330] as const;
 
+export function isRemoteAvatarUrl(raw: string | null | undefined): boolean {
+  return typeof raw === "string" && /^https?:\/\//i.test(raw);
+}
+
 export function serializeAvatar(preset: AvatarPreset): string {
   return `icon:${preset.icon}|hue:${preset.hue}`;
 }
 
 export function parseAvatar(raw: string | null | undefined): AvatarPreset {
-  if (!raw?.startsWith("icon:")) return DEFAULT;
+  if (!raw || isRemoteAvatarUrl(raw) || !raw.startsWith("icon:")) return DEFAULT;
   const iconMatch = raw.match(/icon:([^|]+)/);
   const hueMatch = raw.match(/hue:(\d+)/);
   const icon = iconMatch?.[1] ?? DEFAULT.icon;
