@@ -1,5 +1,4 @@
 import { Image } from "expo-image";
-import * as Contacts from "expo-contacts";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -23,6 +22,11 @@ import {
   fetchFriendsLeaderboard,
   type FriendLeaderboardEntry,
 } from "@/lib/friends/friends-service";
+import { buildSmsUrl, getInviteMessage } from "@/lib/friends/invite";
+import {
+  loadInviteContacts,
+  type InviteContact,
+} from "@/lib/friends/load-invite-contacts";
 
 export default function FriendsScreen() {
   const { colors } = useTheme();
@@ -32,11 +36,10 @@ export default function FriendsScreen() {
   const [board, setBoard] = useState<FriendLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inviteContacts, setInviteContacts] = useState<
-    { id: string; name: string; phone: string | null }[]
-  >([]);
+  const [inviteContacts, setInviteContacts] = useState<InviteContact[]>([]);
   const [contactsBusy, setContactsBusy] = useState(false);
   const [contactsError, setContactsError] = useState<string | null>(null);
+  const [inviteBusy, setInviteBusy] = useState(false);
 
   const loadLeaderboard = useCallback(async () => {
     if (!user) {
@@ -65,55 +68,38 @@ export default function FriendsScreen() {
     loadLeaderboard();
   }, [authLoading, loadLeaderboard]);
 
-  const loadInviteContacts = useCallback(async () => {
+  const openMessagesInvite = useCallback(async (phone?: string | null) => {
+    setInviteBusy(true);
+    try {
+      await Linking.openURL(buildSmsUrl(phone));
+    } catch {
+      await Share.share({ message: getInviteMessage() });
+    } finally {
+      setInviteBusy(false);
+    }
+  }, []);
+
+  const refreshInviteContacts = useCallback(async () => {
     setContactsBusy(true);
     setContactsError(null);
     try {
-      const permission = await Contacts.requestPermissionsAsync();
-      if (permission.status !== "granted") {
-        setContactsError("Contacts permission is needed to suggest invites.");
-        setInviteContacts([]);
-        return;
-      }
-      const result = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.PhoneNumbers],
-        pageSize: 100,
-      });
-
-      const picks = result.data
-        .map((contact) => {
-          const phone = contact.phoneNumbers?.[0]?.number ?? null;
-          return {
-            id: contact.id,
-            name: contact.name ?? "Unknown",
-            phone,
-          };
-        })
-        .filter((contact) => contact.name.trim().length > 0)
-        .slice(0, 6);
+      const picks = await loadInviteContacts();
       setInviteContacts(picks);
-    } catch {
-      setContactsError("Couldn't load contacts right now.");
+      if (picks.length === 0) {
+        setContactsError(
+          "No contacts with phone numbers found. You can still invite via Messages below.",
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Couldn't load contacts right now.";
+      setContactsError(message);
       setInviteContacts([]);
     } finally {
       setContactsBusy(false);
     }
-  }, []);
-
-  const sendInvite = useCallback(async (contact: { name: string; phone: string | null }) => {
-    const message =
-      "Join me on Trace - we can compete for tile coverage. https://traceexplore.app";
-    if (contact.phone) {
-      const sanitized = contact.phone.replace(/\s+/g, "");
-      const separator = process.env.EXPO_OS === "ios" ? "&" : "?";
-      const smsUrl = `sms:${sanitized}${separator}body=${encodeURIComponent(message)}`;
-      const supported = await Linking.canOpenURL(smsUrl);
-      if (supported) {
-        await Linking.openURL(smsUrl);
-        return;
-      }
-    }
-    await Share.share({ message });
   }, []);
 
   return (
@@ -291,78 +277,108 @@ export default function FriendsScreen() {
         </View>
       ) : null}
 
-      {user ? (
-        <View
+      <View
+        style={{
+          backgroundColor: colors.surfaceRaised,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 18,
+          gap: 12,
+        }}
+      >
+        <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}>
+          Invite friends
+        </Text>
+        <Text
           style={{
-            backgroundColor: colors.surfaceRaised,
-            borderRadius: radius.lg,
-            borderWidth: 1,
-            borderColor: colors.border,
-            padding: 18,
-            gap: 12,
+            fontFamily: fonts.body,
+            fontSize: 13,
+            color: colors.textMuted,
+            lineHeight: 19,
           }}
         >
-          <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}>
-            Invite from contacts
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 13,
-              color: colors.textMuted,
-              lineHeight: 19,
+          Open Messages with a ready-to-send beta invite, or pick someone from your contacts.
+        </Text>
+
+        <PillButton
+          label={inviteBusy ? "Opening Messages…" : "Invite via Messages"}
+          disabled={inviteBusy}
+          onPress={() => {
+            openMessagesInvite().catch(() => {});
+          }}
+        />
+
+        <PillButton
+          label="Share invite link"
+          variant="outline"
+          onPress={() => {
+            Share.share({ message: getInviteMessage() }).catch(() => {});
+          }}
+        />
+
+        {contactsBusy ? <ActivityIndicator color={colors.ember} /> : null}
+
+        {!contactsBusy && inviteContacts.length === 0 ? (
+          <PillButton
+            label="Find contacts"
+            variant="outline"
+            onPress={() => {
+              refreshInviteContacts().catch(() => {});
             }}
-          >
-            Pull a few contacts and send a quick invite link.
-          </Text>
+          />
+        ) : null}
 
-          {contactsBusy ? <ActivityIndicator color={colors.ember} /> : null}
-
-          {!contactsBusy && inviteContacts.length === 0 ? (
-            <PillButton label="Find contacts" onPress={loadInviteContacts} />
-          ) : null}
-
-          {contactsError ? (
+        {contactsError ? (
+          <View style={{ gap: 8 }}>
             <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.danger }}>
               {contactsError}
             </Text>
-          ) : null}
-
-          {inviteContacts.map((contact) => (
-            <View
-              key={contact.id}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 8,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: radius.md,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
+            <PillButton
+              label="Try again"
+              variant="outline"
+              style={{ paddingVertical: 8, paddingHorizontal: 14 }}
+              onPress={() => {
+                refreshInviteContacts().catch(() => {});
               }}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.text }}>
-                  {contact.name}
-                </Text>
-                <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textFaint }}>
-                  {contact.phone ?? "No number"}
-                </Text>
-              </View>
-              <PillButton
-                label="Invite"
-                variant="outline"
-                style={{ paddingVertical: 8, paddingHorizontal: 14 }}
-                onPress={() => {
-                  sendInvite(contact).catch(() => {});
-                }}
-              />
+            />
+          </View>
+        ) : null}
+
+        {inviteContacts.map((contact) => (
+          <View
+            key={contact.id}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.md,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.text }}>
+                {contact.name}
+              </Text>
+              <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textFaint }}>
+                {contact.phone}
+              </Text>
             </View>
-          ))}
-        </View>
-      ) : null}
+            <PillButton
+              label="Invite"
+              variant="outline"
+              style={{ paddingVertical: 8, paddingHorizontal: 14 }}
+              onPress={() => {
+                openMessagesInvite(contact.phone).catch(() => {});
+              }}
+            />
+          </View>
+        ))}
+      </View>
 
       <Text
         style={{
