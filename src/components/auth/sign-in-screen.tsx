@@ -15,7 +15,11 @@ import {
 
 import { PillButton } from "@/components/ui/pill-button";
 import { colors, fonts, radius } from "@/constants/theme";
-import { SignInCancelledError, authService } from "@/lib/auth/auth-service";
+import {
+  SignInCancelledError,
+  authService,
+  isGoogleSignInAvailable,
+} from "@/lib/auth/auth-service";
 
 type Busy = "apple" | "google" | "email" | null;
 

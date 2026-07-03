@@ -1,5 +1,34 @@
 import "@/lib/polyfills/text-decoder-polyfill";
 
+// #region agent log
+fetch("http://127.0.0.1:7602/ingest/63dd9fb2-dc30-403c-a52a-6de43de83ec2", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Debug-Session-Id": "cc3882",
+  },
+  body: JSON.stringify({
+    sessionId: "cc3882",
+    runId: "post-fix",
+    hypothesisId: "H4",
+    location: "h3/index.ts:before-h3-js",
+    message: "polyfill finished, about to import h3-js",
+    data: {
+      hasTextDecoder: typeof globalThis.TextDecoder !== "undefined",
+      utf16leOk: (() => {
+        try {
+          new globalThis.TextDecoder("utf-16le");
+          return true;
+        } catch {
+          return false;
+        }
+      })(),
+    },
+    timestamp: Date.now(),
+  }),
+}).catch(() => {});
+// #endregion
+
 import {
   cellToBoundary,
   cellToLatLng,

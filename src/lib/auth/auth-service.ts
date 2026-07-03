@@ -5,17 +5,17 @@
  * Native flows only (no web redirects): Apple and Google produce an ID token
  * on-device which is exchanged via supabase.auth.signInWithIdToken.
  */
-import {
-  GoogleSignin,
-  isErrorWithCode,
-  isSuccessResponse,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
 import * as AppleAuthentication from "expo-apple-authentication";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
+import {
+  getGoogleSignInModule,
+  isGoogleSignInAvailable,
+} from "@/lib/auth/google-signin-native";
 import type { AuthProvider, User } from "@/lib/auth/types";
 import { supabase } from "@/lib/supabase/client";
+
+export { isGoogleSignInAvailable };
 
 /** Thrown when the user dismisses the native sign-in sheet — not an error state. */
 export class SignInCancelledError extends Error {
@@ -46,6 +46,7 @@ let googleConfigured = false;
 
 function configureGoogle(): void {
   if (googleConfigured) return;
+  const { GoogleSignin } = getGoogleSignInModule();
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
   if (!iosClientId || !webClientId) {
@@ -108,6 +109,12 @@ export const authService: AuthProvider = {
   },
 
   async signInWithGoogle(): Promise<User> {
+    const {
+      GoogleSignin,
+      isErrorWithCode,
+      isSuccessResponse,
+      statusCodes,
+    } = getGoogleSignInModule();
     configureGoogle();
 
     let idToken: string | null;
