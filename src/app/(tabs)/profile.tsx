@@ -90,6 +90,7 @@ function SettingRow({
 }
 
 export default function ProfileScreen() {
+  const { colors, scheme, setColorScheme } = useTheme();
   const [units, setUnits] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const [bgEnabled, setBgEnabled] = useSetting(
     SETTINGS_KEYS.backgroundTracking,
@@ -172,12 +173,29 @@ export default function ProfileScreen() {
       </Animated.View>
 
       <View style={{ gap: 12 }}>
+        <SectionHeader title="Appearance" />
+        <SettingRow
+          sf="sun.max.fill"
+          title="Light mode"
+          subtitle={scheme === "light" ? "Paper map and light chrome" : "Dark map and charcoal chrome"}
+          index={0}
+          control={
+            <Switch
+              value={scheme === "light"}
+              onValueChange={(v) => setColorScheme(v ? "light" : "dark")}
+              trackColor={{ true: colors.ember }}
+            />
+          }
+        />
+      </View>
+
+      <View style={{ gap: 12 }}>
         <SectionHeader title="Tracking" />
         <SettingRow
           sf="location.fill.viewfinder"
           title="Background tracking"
           subtitle='Keep revealing tiles with the screen locked. Requires "Always" location. Off by default.'
-          index={0}
+          index={1}
           control={
             <Switch
               value={bgEnabled}
@@ -191,7 +209,7 @@ export default function ProfileScreen() {
           sf="ruler"
           title="Units"
           subtitle={units === "mi" ? "Miles and square miles" : "Kilometers and square kilometers"}
-          index={1}
+          index={2}
           control={
             <Switch
               value={units === "km"}
@@ -205,7 +223,7 @@ export default function ProfileScreen() {
       <View style={{ gap: 12 }}>
         <SectionHeader title="Privacy" />
         <Animated.View
-          entering={FadeInDown.duration(360).delay(staggerDelay(2, 70))}
+          entering={FadeInDown.duration(360).delay(staggerDelay(3, 70))}
           style={{
             backgroundColor: colors.surfaceRaised,
             borderRadius: radius.md,
@@ -243,7 +261,7 @@ export default function ProfileScreen() {
       </View>
 
       <Animated.View
-        entering={FadeInDown.duration(360).delay(staggerDelay(3, 70))}
+        entering={FadeInDown.duration(360).delay(staggerDelay(4, 70))}
         style={{ gap: 12 }}
       >
         <SectionHeader title="Danger zone" />

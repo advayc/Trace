@@ -2,7 +2,8 @@ import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface StreakRingProps {
   current: number;
@@ -11,14 +12,16 @@ interface StreakRingProps {
 }
 
 export function StreakRing({ current, best, todayActive }: StreakRingProps) {
+  const theme = useTheme();
+
   return (
     <Animated.View
       entering={FadeInDown.duration(420).delay(60)}
       style={{
-        backgroundColor: colors.surfaceRaised,
+        backgroundColor: theme.colors.surfaceRaised,
         borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: current > 0 ? colors.successBorder : colors.border,
+        borderColor: current > 0 ? theme.colors.successBorder : theme.colors.border,
         padding: 22,
         flexDirection: "row",
         alignItems: "center",
@@ -31,8 +34,8 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
           height: 88,
           borderRadius: 44,
           borderWidth: 3,
-          borderColor: current > 0 ? colors.mint : colors.fog,
-          backgroundColor: colors.mintDim,
+          borderColor: current > 0 ? theme.colors.mint : theme.colors.fog,
+          backgroundColor: theme.colors.mintDim,
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -41,7 +44,7 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
           style={{
             fontFamily: fonts.displayBold,
             fontSize: 32,
-            color: current > 0 ? colors.mint : colors.textMuted,
+            color: current > 0 ? theme.colors.mint : theme.colors.textMuted,
           }}
         >
           {current}
@@ -52,10 +55,14 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
           <Image
             source="sf:flame.fill"
             style={{ width: 16, height: 16 }}
-            tintColor={colors.mint}
+            tintColor={theme.colors.mint}
           />
           <Text
-            style={{ fontFamily: fonts.semibold, fontSize: 17, color: colors.text }}
+            style={{
+              fontFamily: fonts.semibold,
+              fontSize: 17,
+              color: theme.colors.text,
+            }}
           >
             {current === 1 ? "1 day streak" : `${current} day streak`}
           </Text>
@@ -64,7 +71,7 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
           style={{
             fontFamily: fonts.body,
             fontSize: 14,
-            color: colors.textMuted,
+            color: theme.colors.textMuted,
             lineHeight: 20,
           }}
         >
@@ -78,7 +85,7 @@ export function StreakRing({ current, best, todayActive }: StreakRingProps) {
           style={{
             fontFamily: fonts.medium,
             fontSize: 13,
-            color: colors.textFaint,
+            color: theme.colors.textFaint,
           }}
         >
           Best: {best} {best === 1 ? "day" : "days"}

@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { FogMap } from "@/components/map/fog-map";
 import { LocationDenied } from "@/components/map/location-denied";
 import { ConfettiCelebration } from "@/components/ui/confetti-celebration";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
 import { useSetting } from "@/hooks/use-settings";
 import { locationService } from "@/lib/location/location-service";
@@ -13,6 +13,7 @@ import { SETTINGS_KEYS } from "@/lib/storage/settings";
 import { useSessionStore } from "@/store/session-store";
 
 export default function MapScreen() {
+  const { colors } = useTheme();
   const [onboarded] = useSetting(SETTINGS_KEYS.onboarded, false);
   const [permission, setPermission] = useState<"unknown" | "granted" | "denied">(
     "unknown",

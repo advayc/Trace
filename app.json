@@ -18,6 +18,7 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Trace reveals map tiles as you walk. Your precise location stays on your device.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Keep revealing tiles when the screen is locked during a walk. Optional, off by default.",
+        "NSContactsUsageDescription": "Trace can suggest contacts so you can invite friends to the leaderboard.",
         "NSHealthShareUsageDescription": "Trace can read step counts to enrich your activity stats.",
         "NSHealthUpdateUsageDescription": "Trace can save completed walks and runs to Apple Health.",
         "UIBackgroundModes": [
@@ -52,6 +53,12 @@
           "backgroundColor": "#0C0E12",
           "image": "./assets/images/trace-splash.png",
           "imageWidth": 200
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Trace can suggest contacts so you can invite friends to the leaderboard."
         }
       ],
       [

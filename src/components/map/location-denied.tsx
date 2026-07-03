@@ -3,9 +3,12 @@ import { Linking, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { PillButton } from "@/components/ui/pill-button";
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 export function LocationDenied() {
+  const { colors } = useTheme();
+
   return (
     <Animated.View
       entering={FadeInDown.duration(450)}

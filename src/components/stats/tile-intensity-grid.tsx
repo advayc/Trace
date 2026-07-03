@@ -3,13 +3,15 @@ import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
-import { colors, fonts, heatColor, radius } from "@/constants/theme";
+import { fonts, heatColor, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useTileVisitSamples } from "@/hooks/use-daily-activity";
 import { formatCompact } from "@/lib/stats/format";
 
 const COLS = 12;
 
 export function TileIntensityGrid() {
+  const { colors } = useTheme();
   const samples = useTileVisitSamples(96);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 

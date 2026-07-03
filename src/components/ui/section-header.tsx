@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 
-import { colors, fonts } from "@/constants/theme";
+import { fonts } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface SectionHeaderProps {
   title: string;
@@ -8,6 +9,8 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, subtitle }: SectionHeaderProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={{ gap: 4 }}>
       <Text

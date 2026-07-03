@@ -1,7 +1,8 @@
 import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { colors, fonts } from "@/constants/theme";
+import { fonts } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface ScreenHeaderProps {
   title: string;
@@ -15,6 +16,8 @@ export function ScreenHeader({
   subtitle,
   size = "large",
 }: ScreenHeaderProps) {
+  const { colors } = useTheme();
+
   return (
     <Animated.View entering={FadeInDown.duration(420)} style={{ gap: 6 }}>
       <Text

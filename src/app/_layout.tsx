@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Side effect: registers the background location task at module scope.
 import "@/lib/location/background-task";
@@ -41,7 +42,8 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaProvider>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style={scheme === "light" ? "dark" : "light"} />
       <Stack
         screenOptions={{
@@ -68,5 +70,6 @@ export default function RootLayout() {
       </Stack>
       {splashVisible ? <AnimatedSplash onFinish={onSplashFinish} /> : null}
     </View>
+    </SafeAreaProvider>
   );
 }

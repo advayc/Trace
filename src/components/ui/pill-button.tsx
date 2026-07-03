@@ -1,7 +1,8 @@
 import * as Haptics from "expo-haptics";
 import { Pressable, StyleProp, Text, ViewStyle } from "react-native";
 
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface PillButtonProps {
   label: string;
@@ -18,6 +19,7 @@ export function PillButton({
   style,
   disabled,
 }: PillButtonProps) {
+  const { colors } = useTheme();
   const background =
     variant === "primary"
       ? colors.ember

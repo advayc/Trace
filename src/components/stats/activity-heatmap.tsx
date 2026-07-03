@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius, type ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useDailyActivity } from "@/hooks/use-daily-activity";
 import { useSetting } from "@/hooks/use-settings";
 import { formatCompact, formatDistance, type Units } from "@/lib/stats/format";
@@ -16,7 +17,7 @@ const CELL = 12;
 const GAP = 4;
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-function activityFill(newTiles: number, peak: number): string {
+function activityFill(colors: ThemeColors, newTiles: number, peak: number): string {
   if (newTiles <= 0) return colors.fog;
   const intensity = Math.min(1, newTiles / peak);
   if (intensity < 0.34) return colors.emberDim;
@@ -34,6 +35,8 @@ function formatDayLabel(day: string): string {
 }
 
 function DayDetail({ day, units }: { day: DailyStat; units: Units }) {
+  const { colors } = useTheme();
+
   return (
     <Animated.View
       entering={FadeIn.duration(200)}
@@ -59,6 +62,7 @@ function DayDetail({ day, units }: { day: DailyStat; units: Units }) {
 }
 
 export function ActivityHeatmap() {
+  const { colors } = useTheme();
   const activity = useDailyActivity(DAYS);
   const [units] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const [selected, setSelected] = useState<DailyStat | null>(null);
@@ -166,7 +170,7 @@ export function ActivityHeatmap() {
                         height: CELL,
                         borderRadius: 4,
                         backgroundColor: hasData
-                          ? activityFill(day.newTiles, peak)
+                          ? activityFill(colors, day.newTiles, peak)
                           : "transparent",
                         borderWidth: isSelected ? 1.5 : 1,
                         borderColor: isSelected ? colors.text : colors.border,
@@ -211,7 +215,7 @@ export function ActivityHeatmap() {
               height: 12,
               borderRadius: 2,
               backgroundColor:
-                level === 0 ? colors.fog : activityFill(Math.ceil(peak * level), peak),
+                level === 0 ? colors.fog : activityFill(colors, Math.ceil(peak * level), peak),
             }}
           />
         ))}

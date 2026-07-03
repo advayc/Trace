@@ -2,7 +2,8 @@ import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { staggerDelay } from "@/lib/motion/stagger";
 
 interface StatCardProps {
@@ -14,6 +15,8 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, sf, accent, index = 0 }: StatCardProps) {
+  const { colors } = useTheme();
+
   return (
     <Animated.View
       entering={FadeInUp.duration(380).delay(staggerDelay(index, 70))}

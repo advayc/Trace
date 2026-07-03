@@ -4,8 +4,9 @@ import { Alert, Pressable, Text, View } from "react-native";
 
 import { GoogleIcon } from "@/components/ui/google-icon";
 import { PillButton } from "@/components/ui/pill-button";
-import { colors, fonts, radius } from "@/constants/theme";
+import { fonts, radius } from "@/constants/theme";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useTheme } from "@/hooks/use-theme";
 import { authService } from "@/lib/auth/auth-service";
 import type { User } from "@/lib/auth/types";
 
@@ -17,6 +18,7 @@ const PROVIDER_META = {
 } as const;
 
 function ProviderBadge({ provider }: { provider: User["provider"] }) {
+  const { colors } = useTheme();
   const meta = PROVIDER_META[provider];
   return (
     <View
@@ -57,6 +59,8 @@ function initialsFor(user: User): string {
 }
 
 function AccountDetail({ label, value }: { label: string; value: string }) {
+  const { colors } = useTheme();
+
   return (
     <View style={{ gap: 3 }}>
       <Text
@@ -86,6 +90,7 @@ function AccountDetail({ label, value }: { label: string; value: string }) {
 
 /** Profile-tab account card — full details when signed in, CTA when signed out. */
 export function AccountRow() {
+  const { colors } = useTheme();
   const router = useRouter();
   const { user, loading } = useAuthUser();
 

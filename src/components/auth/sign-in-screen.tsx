@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -36,6 +37,7 @@ export function SignInScreen() {
   const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [closeHovered, setCloseHovered] = useState(false);
 
   const emailValid = email.includes("@") && password.length >= 6;
   const googleAvailable = isGoogleSignInAvailable();
@@ -74,23 +76,51 @@ export function SignInScreen() {
       behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
     >
       <View
+        pointerEvents="box-none"
         style={{
-          flexDirection: "row",
-          justifyContent: "flex-end",
-          paddingHorizontal: spacing.screen,
-          paddingTop: 8,
+          position: "absolute",
+          right: 18,
+          top: 14,
+          zIndex: 20,
         }}
       >
         <Pressable
           onPress={() => router.back()}
-          hitSlop={12}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          onHoverIn={() => setCloseHovered(true)}
+          onHoverOut={() => setCloseHovered(false)}
+          hitSlop={10}
+          style={({ pressed }) => ({
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: closeHovered ? colors.accentBorder : colors.border,
+            transform: [{ scale: pressed ? 0.96 : closeHovered ? 1.03 : 1 }],
+            shadowColor: colors.ember,
+            shadowOpacity: closeHovered ? 0.26 : 0.12,
+            shadowRadius: closeHovered ? 14 : 8,
+            shadowOffset: { width: 0, height: 4 },
+          })}
         >
-          <Image
-            source="sf:xmark"
-            style={{ width: 18, height: 18 }}
-            tintColor={colors.textMuted}
-          />
+          <BlurView
+            tint="dark"
+            intensity={closeHovered ? 52 : 36}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: closeHovered
+                ? "rgba(200,83,60,0.16)"
+                : "rgba(24,24,24,0.5)",
+            }}
+          >
+            <Image
+              source="sf:xmark"
+              style={{ width: 14, height: 14 }}
+              tintColor={closeHovered ? colors.text : colors.textMuted}
+            />
+          </BlurView>
         </Pressable>
       </View>
 

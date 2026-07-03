@@ -9,7 +9,8 @@ import { StreakRing } from "@/components/stats/streak-ring";
 import { TileIntensityGrid } from "@/components/stats/tile-intensity-grid";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
-import { colors, spacing } from "@/constants/theme";
+import { spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
 import { useActivityHistory } from "@/hooks/use-activity-history";
 import { useSetting } from "@/hooks/use-settings";
@@ -26,6 +27,7 @@ import { staggerDelay } from "@/lib/motion/stagger";
 import { SETTINGS_KEYS } from "@/lib/storage/settings";
 
 export default function ProgressScreen() {
+  const { colors } = useTheme();
   const stats = useStats();
   const activityHistory = useActivityHistory(8);
   const [units] = useSetting<Units>(SETTINGS_KEYS.units, "km");
