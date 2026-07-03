@@ -1,22 +1,38 @@
 {
   "expo": {
-    "name": "trace-app",
-    "slug": "trace-app",
+    "name": "Trace",
+    "slug": "trace",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "traceapp",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/trace-icon.png",
+    "scheme": "trace",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0C0E12",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.trace.app",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Trace reveals map tiles as you walk. Your precise location stays on your device.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Keep revealing tiles when the screen is locked during a walk. Optional, off by default.",
+        "UIBackgroundModes": ["location"]
+      }
     },
     "android": {
+      "package": "com.trace.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#0C0E12",
+        "foregroundImage": "./assets/images/trace-icon.png"
       },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -28,11 +44,22 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#0C0E12",
+          "image": "./assets/images/trace-splash.png",
+          "imageWidth": 200
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Trace reveals map tiles as you walk. Your precise location stays on your device.",
+          "locationAlwaysAndWhenInUsePermission": "Keep revealing tiles when the screen is locked during a walk. Optional, off by default.",
+          "isIOSBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

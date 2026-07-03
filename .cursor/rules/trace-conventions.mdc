@@ -1,0 +1,17 @@
+---
+description: Trace project conventions
+alwaysApply: true
+---
+
+# Trace conventions
+
+- Kebab-case for all filenames (`fog-map.tsx`, not `FogMap.tsx`).
+- `src/app/` contains ONLY route and `_layout` files; components/types/utils live in `src/components/`, `src/lib/`, `src/hooks/`, `src/constants/`, `src/store/`.
+- Import with `@/` path aliases, never deep relative paths.
+- Colors and spacing come from `src/constants/theme.ts` — no ad-hoc hex values in components. Palette: bg `#0C0E12`, surface `#14171E`, fog `#1A1D24`, ember `#E8A04C`, mint `#6EE7B7`, text `#F4F4F5` / `#9CA3AF`.
+- Privacy invariant: never place raw latitude/longitude in a network payload, sync queue entry, or export — only H3 cell indexes (resolution 10 via `H3_RESOLUTION`).
+- H3 resolution is defined once in `src/lib/h3/index.ts`; never hardcode `10` elsewhere.
+- Tiles unlock only through `StompEngine` with validated GPS samples; no debug reveal paths in shipped code.
+- Storage: `expo-sqlite` for tiles/stats, `expo-sqlite/localStorage` polyfill for key-value — never AsyncStorage.
+- `process.env.EXPO_OS` not `Platform.OS`; SF Symbols via `expo-image` `source="sf:..."`; scrollable roots use `contentInsetAdjustmentBehavior="automatic"`.
+- Before working on map/engine, UI, or assets, read the matching skill in `.cursor/skills/` (see `AGENTS.md`).
