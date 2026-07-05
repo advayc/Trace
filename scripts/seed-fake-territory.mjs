@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { cellToLatLng, gridDisk, gridRing, latLngToCell } from "h3-js";
+import { inspect } from "node:util";
 
 const H3_RESOLUTION = 10;
 const DEFAULT_FAKE_COUNT = 4;
@@ -296,6 +297,8 @@ async function main() {
   console.log(`Target user: ${targetUserId}`);
   console.log(`Fake users: ${fakes.length}`);
 
+  const fakeUserIds = [];
+
   for (let i = 0; i < fakes.length; i += 1) {
     const fake = fakes[i];
     const cells = makeTerritoryCells(centerCell, i);
@@ -304,10 +307,26 @@ async function main() {
 
     if (args.dryRun) continue;
 
-    const fakeAuthUser = await ensureFakeAuthUser(admin, fake);
-    await upsertFakeProfile(admin, fakeAuthUser.id, fake);
-    await ensureAcceptedFriendship(admin, targetUserId, fakeAuthUser.id);
-    await upsertTiles(admin, fakeAuthUser.id, cells);
+    try {
+      const fakeAuthUser = await ensureFakeAuthUser(admin, fake);
+      fakeUserIds.push(fakeAuthUser.id);
+      await upsertFakeProfile(admin, fakeAuthUser.id, fake);
+      await ensureAcceptedFriendship(admin, targetUserId, fakeAuthUser.id);
+      await upsertTiles(admin, fakeAuthUser.id, cells);
+    } catch (error) {
+      throw new Error(
+        `Failed while seeding ${fake.username}: ${inspect(error, { depth: 8, colors: false })}`,
+      );
+    }
+  }
+
+  if (!args.dryRun) {
+    for (let i = 0; i < fakeUserIds.length; i += 1) {
+      for (let j = i + 1; j < fakeUserIds.length; j += 1) {
+        await ensureAcceptedFriendship(admin, fakeUserIds[i], fakeUserIds[j]);
+      }
+    }
+    console.log("Friendships established: target<->fake and fake<->fake.");
   }
 
   if (args.dryRun) {
@@ -319,6 +338,11 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
+  if (error instanceof Error) {
+    console.error(error.message);
+    if (error.stack) console.error(error.stack);
+  } else {
+    console.error(inspect(error, { depth: 8, colors: false }));
+  }
   process.exit(1);
 });

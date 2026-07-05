@@ -60,7 +60,7 @@ begin
     base_username := 'walker';
   end if;
 
-  insert into public.profiles (id, display_name, username, provider)
+  insert into public.profiles (id, display_name, username, invite_code, provider)
   values (
     NEW.id,
     coalesce(
@@ -69,6 +69,7 @@ begin
       split_part(NEW.email, '@', 1)
     ),
     left(base_username, 17) || '_' || substring(replace(NEW.id::text, '-', '') from 1 for 6),
+    substring(replace(NEW.id::text, '-', '') from 1 for 10),
     case coalesce(NEW.raw_app_meta_data->>'provider', '')
       when 'apple' then 'apple'
       when 'google' then 'google'
