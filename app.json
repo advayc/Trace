@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.traceexplore.app",
       "icon": "./assets/images/trace-icon.png",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "config": {
@@ -22,6 +22,7 @@
         "NSLocationWhenInUseUsageDescription": "Trace reveals map tiles as you walk. Your precise location stays on your device.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Keep revealing tiles when the screen is locked during a walk. Optional, off by default.",
         "NSContactsUsageDescription": "Trace can suggest contacts so you can invite friends to the leaderboard.",
+        "NSMotionUsageDescription": "Trace uses motion activity to improve walk detection while you explore.",
         "NSHealthShareUsageDescription": "Trace can read step counts to enrich your activity stats.",
         "NSHealthUpdateUsageDescription": "Trace can save completed walks and runs to Apple Health.",
         "UIBackgroundModes": [
