@@ -5,8 +5,8 @@ import { AchievementBadgeIcon } from "@/components/stats/achievement-badge-icon"
 import { fonts, radius, spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import {
-  getAchievementProgress,
-  type AchievementDef,
+    getAchievementProgress,
+    type AchievementDef,
 } from "@/lib/achievements/definitions";
 import type { TraceStats } from "@/lib/stats/stats-service";
 

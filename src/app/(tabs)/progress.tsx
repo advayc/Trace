@@ -2,26 +2,26 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { AchievementGrid } from "@/components/stats/achievement-grid";
 import { AchievementDetailModal } from "@/components/stats/achievement-detail-modal";
+import { AchievementGrid } from "@/components/stats/achievement-grid";
 import { StatCard } from "@/components/stats/stat-card";
 import { StreakRing } from "@/components/stats/streak-ring";
 import { TileIntensityGrid } from "@/components/stats/tile-intensity-grid";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
 import { spacing } from "@/constants/theme";
-import { useUnlockedAchievementIds } from "@/hooks/use-unlocked-achievement-ids";
-import { useTheme } from "@/hooks/use-theme";
 import { useSetting } from "@/hooks/use-settings";
 import { useStats } from "@/hooks/use-stats";
+import { useTheme } from "@/hooks/use-theme";
+import { useUnlockedAchievementIds } from "@/hooks/use-unlocked-achievement-ids";
 import { ACHIEVEMENTS } from "@/lib/achievements/definitions";
-import {
-  formatArea,
-  formatCompact,
-  formatDistance,
-  type Units,
-} from "@/lib/stats/format";
 import { staggerDelay } from "@/lib/motion/stagger";
+import {
+    formatArea,
+    formatCompact,
+    formatDistance,
+    type Units,
+} from "@/lib/stats/format";
 import { SETTINGS_KEYS } from "@/lib/storage/settings";
 
 export default function ProgressScreen() {

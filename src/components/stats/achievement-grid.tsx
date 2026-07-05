@@ -5,12 +5,12 @@ import { AchievementBadgeIcon } from "@/components/stats/achievement-badge-icon"
 import { fonts, radius } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import {
-  ACHIEVEMENTS,
-  getAchievementProgress,
-  type AchievementDef,
+    ACHIEVEMENTS,
+    getAchievementProgress,
+    type AchievementDef,
 } from "@/lib/achievements/definitions";
-import type { TraceStats } from "@/lib/stats/stats-service";
 import { staggerDelay } from "@/lib/motion/stagger";
+import type { TraceStats } from "@/lib/stats/stats-service";
 
 interface AchievementGridProps {
   unlockedIds: string[];
