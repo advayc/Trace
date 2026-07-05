@@ -126,6 +126,7 @@
       [
         "expo-widgets",
         {
+          "bundleIdentifier": "com.traceexplore.app.widgets",
           "groupIdentifier": "group.com.traceexplore.app",
           "enablePushNotifications": false,
           "widgets": [
