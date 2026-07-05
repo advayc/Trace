@@ -1,7 +1,26 @@
-import * as ExpoHealthKit from "@kayzmann/expo-healthkit";
+import Constants from "expo-constants";
+import { Platform } from "react-native";
 
 import type { Activity, ActivityType } from "@/lib/activity/activity-types";
 import { SETTINGS_KEYS, settings } from "@/lib/storage/settings";
+
+type ExpoHealthKitModule = typeof import("@kayzmann/expo-healthkit");
+
+let healthKitModule: ExpoHealthKitModule | null | undefined;
+
+function getHealthKit(): ExpoHealthKitModule | null {
+  if (Platform.OS !== "ios") return null;
+  if (Constants.executionEnvironment === "storeClient") return null;
+  if (healthKitModule !== undefined) return healthKitModule;
+
+  try {
+    healthKitModule = require("@kayzmann/expo-healthkit") as ExpoHealthKitModule;
+  } catch {
+    healthKitModule = null;
+  }
+
+  return healthKitModule;
+}
 
 export interface HealthWorkout {
   activityId: string;
@@ -47,7 +66,8 @@ function averageHeartRate(
 }
 
 async function authorize(): Promise<boolean> {
-  if (process.env.EXPO_OS !== "ios") return false;
+  const ExpoHealthKit = getHealthKit();
+  if (!ExpoHealthKit) return false;
   try {
     if (!ExpoHealthKit.isAvailable()) return false;
     await ExpoHealthKit.requestAuthorization(
@@ -62,7 +82,8 @@ async function authorize(): Promise<boolean> {
 
 export const healthService: HealthService = {
   async isAvailable() {
-    if (process.env.EXPO_OS !== "ios") return false;
+    const ExpoHealthKit = getHealthKit();
+    if (!ExpoHealthKit) return false;
     try {
       return ExpoHealthKit.isAvailable();
     } catch {
@@ -85,7 +106,8 @@ export const healthService: HealthService = {
   },
 
   async readTodaySteps() {
-    if (!this.isEnabled() || process.env.EXPO_OS !== "ios") return null;
+    const ExpoHealthKit = getHealthKit();
+    if (!this.isEnabled() || !ExpoHealthKit) return null;
     try {
       if (!ExpoHealthKit.isAvailable()) return null;
       const start = new Date();
@@ -97,7 +119,8 @@ export const healthService: HealthService = {
   },
 
   async writeWorkout(activity) {
-    if (!this.isEnabled() || process.env.EXPO_OS !== "ios" || activity.type === "passive") {
+    const ExpoHealthKit = getHealthKit();
+    if (!this.isEnabled() || !ExpoHealthKit || activity.type === "passive") {
       return;
     }
     try {
@@ -120,7 +143,8 @@ export const healthService: HealthService = {
   },
 
   async fetchWorkoutMetrics(startedAt, endedAt) {
-    if (!this.isEnabled() || process.env.EXPO_OS !== "ios") {
+    const ExpoHealthKit = getHealthKit();
+    if (!this.isEnabled() || !ExpoHealthKit) {
       return { activeCaloriesKcal: null, avgHeartRateBpm: null };
     }
     try {

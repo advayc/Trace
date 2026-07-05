@@ -297,6 +297,7 @@ export function FogMap() {
           onStartRun={startRun}
           onStop={stopSession}
           onShareLatest={shareLatest}
+          showStartOptions={false}
         />
       </View>
 

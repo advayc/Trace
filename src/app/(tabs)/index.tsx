@@ -4,9 +4,7 @@ import { View } from "react-native";
 
 import { FogMap } from "@/components/map/fog-map";
 import { LocationDenied } from "@/components/map/location-denied";
-import { ConfettiCelebration } from "@/components/ui/confetti-celebration";
 import { useTheme } from "@/hooks/use-theme";
-import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
 import { useSetting } from "@/hooks/use-settings";
 import { locationService } from "@/lib/location/location-service";
 import { SETTINGS_KEYS } from "@/lib/storage/settings";
@@ -19,7 +17,6 @@ export default function MapScreen() {
     "unknown",
   );
   const setTracking = useSessionStore((s) => s.setTracking);
-  const { celebration, dismissCelebration } = useAchievementUnlocks();
 
   useEffect(() => {
     if (!onboarded) return;
@@ -49,10 +46,6 @@ export default function MapScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {permission === "granted" ? <FogMap /> : null}
-      <ConfettiCelebration
-        achievement={celebration}
-        onDismiss={dismissCelebration}
-      />
     </View>
   );
 }

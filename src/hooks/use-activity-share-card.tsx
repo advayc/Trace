@@ -3,7 +3,7 @@ import { View } from "react-native";
 
 import type { Activity } from "@/lib/activity/activity-types";
 import { ActivityShareCard } from "@/lib/share/activity-share-card";
-import { shareActivityCard, shareActivityFromMap } from "@/lib/share/capture-share-image";
+import { shareActivityCard } from "@/lib/share/capture-share-image";
 
 /** Mounts an off-screen share card and captures it when the map is ready. */
 export function useActivityShareCard() {
@@ -14,12 +14,8 @@ export function useActivityShareCard() {
   const share = useCallback(
     (
       activity: Activity,
-      mapRef?: { takeSnapshot?: (o: object) => Promise<string> } | null,
+      _mapRef?: { takeSnapshot?: (o: object) => Promise<string> } | null,
     ) => {
-      if (activity.route.length < 2) {
-        shareActivityFromMap(mapRef ?? null, activity).catch(() => {});
-        return;
-      }
       setMapReady(false);
       setPending(activity);
     },
@@ -37,7 +33,7 @@ export function useActivityShareCard() {
   }, [pending, mapReady]);
 
   const hiddenCard =
-    pending && pending.route.length >= 2 ? (
+    pending ? (
       <View
         pointerEvents="none"
         style={{ position: "absolute", left: -9999, top: 0, opacity: 0 }}

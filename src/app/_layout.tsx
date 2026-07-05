@@ -4,17 +4,17 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
+import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { AppState, Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Side effect: registers the background location task at module scope.
 import "@/lib/location/background-task";
-import "@/widgets/trace-walk-activity";
 import { AnimatedSplash } from "@/components/ui/animated-splash";
 import { useTheme } from "@/hooks/use-theme";
 import {
@@ -23,10 +23,20 @@ import {
 } from "@/lib/notifications/daily-nudge";
 import { initNotificationService } from "@/lib/notifications/notification-service";
 import { getDb } from "@/lib/storage/tile-db";
+import { ensureDefaultSettings } from "@/lib/storage/settings";
+
+if (Platform.OS === "ios" && Constants.executionEnvironment !== "storeClient") {
+  try {
+    require("@/widgets/trace-walk-activity");
+  } catch {
+    // expo-widgets is unavailable in Expo Go.
+  }
+}
 
 SplashScreen.preventAutoHideAsync();
 
 // Open the database (and run migrations) before first render.
+ensureDefaultSettings();
 getDb();
 
 export default function RootLayout() {

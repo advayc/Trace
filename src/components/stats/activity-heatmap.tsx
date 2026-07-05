@@ -13,7 +13,7 @@ import { SETTINGS_KEYS } from "@/lib/storage/settings";
 
 const WEEKS = 12;
 const DAYS = WEEKS * 7;
-const GAP = 3;
+const GAP = 4;
 const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
 interface ActivityHeatmapProps {
@@ -68,7 +68,7 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
   }, [activity]);
 
   const weekdayColWidth = compact ? 14 : 20;
-  const horizontalPadding = fullWidth ? 16 : 18;
+  const horizontalPadding = fullWidth ? 14 : 18;
   const containerWidth = fullWidth ? screenWidth : screenWidth - spacing.screen * 2;
   const gridWidth =
     containerWidth - horizontalPadding * 2 - weekdayColWidth - (compact ? 6 : 8);
@@ -104,11 +104,11 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
     <Animated.View
       entering={FadeInDown.duration(380).delay(120)}
       style={{
-        marginHorizontal: fullWidth ? -spacing.screen : 0,
+        marginHorizontal: fullWidth ? -8 : 0,
         backgroundColor: colors.surfaceRaised,
-        borderRadius: fullWidth ? 0 : radius.lg,
+        borderRadius: radius.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: colors.borderStrong,
         paddingHorizontal: horizontalPadding,
         paddingVertical: compact ? 12 : 18,
         gap: compact ? 8 : 14,
@@ -132,7 +132,9 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
               style={{
                 width: 10,
                 height: 10,
-                borderRadius: 2,
+                borderRadius: radius.xs,
+                borderWidth: 1,
+                borderColor: colors.border,
                 backgroundColor:
                   level === 0 ? colors.fog : activityFill(colors, Math.ceil(peak * level), peak),
               }}
@@ -141,7 +143,16 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
         </View>
       </View>
 
-      <View style={{ gap: 6 }}>
+      <View
+        style={{
+          gap: compact ? 8 : 10,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radius.md,
+          padding: compact ? 10 : 12,
+        }}
+      >
         <View style={{ flexDirection: "row", gap: 6 }}>
           <View style={{ gap: GAP }}>
             {WEEKDAY_LABELS.map((label, i) => (
@@ -154,6 +165,7 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
                     fontFamily: fonts.medium,
                     fontSize: 8,
                     color: colors.textFaint,
+                    textAlign: "center",
                   }}
                 >
                   {label}
@@ -177,12 +189,12 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
                         width: "100%",
                         aspectRatio: 1,
                         maxHeight: cellSize,
-                        borderRadius: 3,
+                        borderRadius: radius.xs,
                         backgroundColor: hasData
                           ? activityFill(colors, day.newTiles, peak)
                           : "transparent",
-                        borderWidth: isSelected ? 1.5 : 1,
-                        borderColor: isSelected ? colors.text : colors.border,
+                        borderWidth: isSelected ? 2 : 1,
+                        borderColor: isSelected ? colors.emberLight : colors.border,
                         opacity: pressed ? 0.75 : 1,
                       })}
                     />
@@ -214,13 +226,24 @@ export function ActivityHeatmap({ fullWidth = false, compact = false }: Activity
 
       {activeDay?.day ? (
         <Animated.View entering={FadeIn.duration(200)}>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted }}>
-            <Text style={{ color: colors.text }}>{formatDayLabel(activeDay.day)}</Text>
-            {" · "}
-            {activeDay.newTiles > 0
-              ? `${formatCompact(activeDay.newTiles)} new tiles · ${formatDistance(activeDay.distanceM, units)}`
-              : "No new tiles"}
-          </Text>
+          <View
+            style={{
+              borderRadius: radius.sm,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              paddingHorizontal: 12,
+              paddingVertical: 9,
+            }}
+          >
+            <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted }}>
+              <Text style={{ color: colors.text }}>{formatDayLabel(activeDay.day)}</Text>
+              {" · "}
+              {activeDay.newTiles > 0
+                ? `${formatCompact(activeDay.newTiles)} new tiles · ${formatDistance(activeDay.distanceM, units)}`
+                : "No new tiles"}
+            </Text>
+          </View>
         </Animated.View>
       ) : null}
     </Animated.View>

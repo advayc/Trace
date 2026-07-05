@@ -9,6 +9,13 @@ export interface AchievementDef {
   check: (stats: TraceStats) => boolean;
 }
 
+export interface AchievementProgress {
+  current: number;
+  target: number;
+  fraction: number;
+  label: string;
+}
+
 const MILE_M = 1609.344;
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -97,3 +104,138 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (s) => s.distanceM >= 26.2 * MILE_M,
   },
 ];
+
+function clampFraction(current: number, target: number): number {
+  if (target <= 0) return 0;
+  return Math.min(1, current / target);
+}
+
+export function getAchievementProgress(
+  achievement: AchievementDef,
+  stats: TraceStats,
+): AchievementProgress {
+  switch (achievement.id) {
+    case "first-tile": {
+      const target = 1;
+      return {
+        current: stats.totalTiles,
+        target,
+        fraction: clampFraction(stats.totalTiles, target),
+        label: `${stats.totalTiles}/${target} tiles`,
+      };
+    }
+    case "tiles-10": {
+      const target = 10;
+      return {
+        current: stats.totalTiles,
+        target,
+        fraction: clampFraction(stats.totalTiles, target),
+        label: `${stats.totalTiles}/${target} tiles`,
+      };
+    }
+    case "tiles-100": {
+      const target = 100;
+      return {
+        current: stats.totalTiles,
+        target,
+        fraction: clampFraction(stats.totalTiles, target),
+        label: `${stats.totalTiles}/${target} tiles`,
+      };
+    }
+    case "tiles-1000": {
+      const target = 1000;
+      return {
+        current: stats.totalTiles,
+        target,
+        fraction: clampFraction(stats.totalTiles, target),
+        label: `${stats.totalTiles.toLocaleString()}/${target.toLocaleString()} tiles`,
+      };
+    }
+    case "tiles-10000": {
+      const target = 10000;
+      return {
+        current: stats.totalTiles,
+        target,
+        fraction: clampFraction(stats.totalTiles, target),
+        label: `${stats.totalTiles.toLocaleString()}/${target.toLocaleString()} tiles`,
+      };
+    }
+    case "streak-3": {
+      const target = 3;
+      const current = Math.max(stats.currentStreak, stats.bestStreak);
+      return {
+        current,
+        target,
+        fraction: clampFraction(current, target),
+        label: `${current}/${target} days`,
+      };
+    }
+    case "streak-7": {
+      const target = 7;
+      const current = Math.max(stats.currentStreak, stats.bestStreak);
+      return {
+        current,
+        target,
+        fraction: clampFraction(current, target),
+        label: `${current}/${target} days`,
+      };
+    }
+    case "streak-30": {
+      const target = 30;
+      const current = Math.max(stats.currentStreak, stats.bestStreak);
+      return {
+        current,
+        target,
+        fraction: clampFraction(current, target),
+        label: `${current}/${target} days`,
+      };
+    }
+    case "day-1mi": {
+      const target = MILE_M;
+      const current = stats.maxDistanceInADayM;
+      return {
+        current,
+        target,
+        fraction: clampFraction(current, target),
+        label: `${(current / MILE_M).toFixed(1)} mi / 1.0 mi`,
+      };
+    }
+    case "day-5mi": {
+      const target = 5 * MILE_M;
+      const current = stats.maxDistanceInADayM;
+      return {
+        current,
+        target,
+        fraction: clampFraction(current, target),
+        label: `${(current / MILE_M).toFixed(1)} mi / 5.0 mi`,
+      };
+    }
+    case "day-100-tiles": {
+      const target = 100;
+      return {
+        current: stats.maxTilesInADay,
+        target,
+        fraction: clampFraction(stats.maxTilesInADay, target),
+        label: `${stats.maxTilesInADay}/${target} tiles`,
+      };
+    }
+    case "distance-26": {
+      const target = 26.2 * MILE_M;
+      const current = stats.distanceM;
+      return {
+        current,
+        target,
+        fraction: clampFraction(current, target),
+        label: `${(current / MILE_M).toFixed(1)} mi / 26.2 mi`,
+      };
+    }
+    default: {
+      return {
+        current: 0,
+        target: 1,
+        fraction: 0,
+        label: "Locked",
+      };
+    }
+  }
+}

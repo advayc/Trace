@@ -56,3 +56,9 @@ export function getDeviceUserId(): string {
   }
   return id;
 }
+
+export function ensureDefaultSettings(): void {
+  if (globalThis.localStorage.getItem(SETTINGS_KEYS.units) == null) {
+    settings.set(SETTINGS_KEYS.units, "km");
+  }
+}

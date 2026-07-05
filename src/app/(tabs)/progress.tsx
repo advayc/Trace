@@ -1,15 +1,17 @@
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AchievementGrid } from "@/components/stats/achievement-grid";
+import { AchievementDetailModal } from "@/components/stats/achievement-detail-modal";
 import { StatCard } from "@/components/stats/stat-card";
 import { StreakRing } from "@/components/stats/streak-ring";
 import { TileIntensityGrid } from "@/components/stats/tile-intensity-grid";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SectionHeader } from "@/components/ui/section-header";
 import { spacing } from "@/constants/theme";
+import { useUnlockedAchievementIds } from "@/hooks/use-unlocked-achievement-ids";
 import { useTheme } from "@/hooks/use-theme";
-import { useAchievementUnlocks } from "@/hooks/use-achievement-unlocks";
 import { useSetting } from "@/hooks/use-settings";
 import { useStats } from "@/hooks/use-stats";
 import { ACHIEVEMENTS } from "@/lib/achievements/definitions";
@@ -26,7 +28,10 @@ export default function ProgressScreen() {
   const { colors } = useTheme();
   const stats = useStats();
   const [units] = useSetting<Units>(SETTINGS_KEYS.units, "km");
-  const { unlockedIds } = useAchievementUnlocks();
+  const unlockedIds = useUnlockedAchievementIds();
+  const [selectedAchievementId, setSelectedAchievementId] = useState<string | null>(null);
+  const selectedAchievement = ACHIEVEMENTS.find((achievement) => achievement.id === selectedAchievementId) ?? null;
+  const selectedUnlocked = selectedAchievement ? unlockedIds.includes(selectedAchievement.id) : false;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -93,9 +98,20 @@ export default function ProgressScreen() {
             title="Achievements"
             subtitle={`${unlockedIds.length} of ${ACHIEVEMENTS.length} unlocked`}
           />
-          <AchievementGrid unlockedIds={unlockedIds} />
+          <AchievementGrid
+            unlockedIds={unlockedIds}
+            stats={stats}
+            onSelect={(achievement) => setSelectedAchievementId(achievement.id)}
+          />
         </View>
       </ScrollView>
+
+      <AchievementDetailModal
+        achievement={selectedAchievement}
+        stats={stats}
+        unlocked={selectedUnlocked}
+        onDismiss={() => setSelectedAchievementId(null)}
+      />
     </View>
   );
 }

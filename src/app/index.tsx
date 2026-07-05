@@ -62,16 +62,16 @@ export default function StartScreen() {
 
       <Pressable
         onPress={continueToFlow}
-        style={({ hovered, pressed }) => ({
+        style={({ pressed }) => ({
           borderRadius: radius.pill,
           borderWidth: 1.5,
-          borderColor: hovered ? colors.emberLight : colors.ember,
-          backgroundColor: hovered ? colors.emberLight : colors.ember,
+          borderColor: colors.ember,
+          backgroundColor: colors.ember,
           paddingVertical: 16,
           paddingHorizontal: 22,
           alignItems: "center",
           opacity: pressed ? 0.86 : 1,
-          transform: [{ scale: pressed ? 0.98 : hovered ? 1.02 : 1 }],
+          transform: [{ scale: pressed ? 0.98 : 1 }],
         })}
       >
         <Text

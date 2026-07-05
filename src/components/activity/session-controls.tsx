@@ -13,6 +13,7 @@ interface SessionControlsProps {
   onStartRun: () => void;
   onStop: () => void;
   onShareLatest: () => void;
+  showStartOptions?: boolean;
 }
 
 function ActivityTypeCard({
@@ -88,6 +89,7 @@ export function SessionControls({
   onStartRun,
   onStop,
   onShareLatest,
+  showStartOptions = true,
 }: SessionControlsProps) {
   const { colors } = useTheme();
 
@@ -150,6 +152,10 @@ export function SessionControls({
         </Pressable>
       </View>
     );
+  }
+
+  if (!showStartOptions) {
+    return null;
   }
 
   return (
