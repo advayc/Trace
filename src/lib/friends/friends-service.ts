@@ -1,5 +1,11 @@
 import { supabase } from "@/lib/supabase/client";
 
+interface FriendProfilePreview {
+  id: string;
+  display_name: string | null;
+  invite_code: string;
+}
+
 export interface FriendLeaderboardEntry {
   id: string;
   name: string;
@@ -35,6 +41,137 @@ export interface FriendTile {
   userId: string;
   visitCount: number;
   displayName: string | null;
+}
+
+export interface FriendInvite {
+  id: string;
+  userId: string;
+  name: string;
+  initials: string;
+  inviteCode: string;
+  createdAt: string;
+}
+
+export interface FriendInviteSnapshot {
+  incoming: FriendInvite[];
+  outgoing: FriendInvite[];
+}
+
+export async function fetchOwnInviteCode(currentUserId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("invite_code")
+    .eq("id", currentUserId)
+    .single();
+  if (error) throw error;
+  return data.invite_code;
+}
+
+export async function sendFriendInviteByCode(inviteCode: string): Promise<void> {
+  const normalized = inviteCode.trim().toLowerCase();
+  if (!normalized) {
+    throw new Error("Invite code is required.");
+  }
+  const { error } = await supabase.rpc("send_friend_invite", {
+    target_invite_code: normalized,
+  });
+  if (error) throw error;
+}
+
+export async function acceptFriendInvite(
+  currentUserId: string,
+  friendshipId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("friendships")
+    .update({ status: "accepted" })
+    .eq("id", friendshipId)
+    .eq("addressee_id", currentUserId)
+    .eq("status", "pending");
+  if (error) throw error;
+}
+
+export async function declineFriendInvite(
+  currentUserId: string,
+  friendshipId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("friendships")
+    .delete()
+    .eq("id", friendshipId)
+    .eq("addressee_id", currentUserId)
+    .eq("status", "pending");
+  if (error) throw error;
+}
+
+export async function cancelOutgoingInvite(
+  currentUserId: string,
+  friendshipId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("friendships")
+    .delete()
+    .eq("id", friendshipId)
+    .eq("requester_id", currentUserId)
+    .eq("status", "pending");
+  if (error) throw error;
+}
+
+export async function fetchFriendInvites(
+  currentUserId: string,
+): Promise<FriendInviteSnapshot> {
+  const { data: edges, error } = await supabase
+    .from("friendships")
+    .select("id, requester_id, addressee_id, created_at")
+    .eq("status", "pending")
+    .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const counterpartIds = Array.from(
+    new Set(
+      (edges ?? []).map((edge) =>
+        edge.requester_id === currentUserId ? edge.addressee_id : edge.requester_id,
+      ),
+    ),
+  );
+
+  let profileById = new Map<string, FriendProfilePreview>();
+  if (counterpartIds.length > 0) {
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, display_name, invite_code")
+      .in("id", counterpartIds);
+    if (profilesError) throw profilesError;
+    profileById = new Map(
+      (profiles ?? []).map((profile) => [profile.id, profile as FriendProfilePreview]),
+    );
+  }
+
+  const incoming: FriendInvite[] = [];
+  const outgoing: FriendInvite[] = [];
+
+  (edges ?? []).forEach((edge) => {
+    const fromRequester = edge.requester_id === currentUserId;
+    const counterpartId = fromRequester ? edge.addressee_id : edge.requester_id;
+    const profile = profileById.get(counterpartId);
+    const name = profile?.display_name ?? "Trace walker";
+    const invite = {
+      id: edge.id,
+      userId: counterpartId,
+      name,
+      initials: initialsFor(name),
+      inviteCode: profile?.invite_code ?? "",
+      createdAt: edge.created_at,
+    } satisfies FriendInvite;
+    if (fromRequester) {
+      outgoing.push(invite);
+    } else {
+      incoming.push(invite);
+    }
+  });
+
+  return { incoming, outgoing };
 }
 
 async function fetchAcceptedFriendIds(currentUserId: string): Promise<string[]> {

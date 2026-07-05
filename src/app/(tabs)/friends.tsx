@@ -3,10 +3,11 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Linking,
+  RefreshControl,
   ScrollView,
   Share,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -19,93 +20,172 @@ import { useTheme } from "@/hooks/use-theme";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useStats } from "@/hooks/use-stats";
 import {
+  acceptFriendInvite,
+  declineFriendInvite,
+  fetchFriendInvites,
   fetchFriendsLeaderboard,
+  fetchOwnInviteCode,
+  friendHueForUserId,
+  sendFriendInviteByCode,
+  type FriendInvite,
   type FriendLeaderboardEntry,
 } from "@/lib/friends/friends-service";
-import { buildSmsUrl, getInviteMessage } from "@/lib/friends/invite";
-import {
-  loadInviteContacts,
-  type InviteContact,
-} from "@/lib/friends/load-invite-contacts";
+
+function initialsFor(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
 export default function FriendsScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const stats = useStats();
   const { user, loading: authLoading } = useAuthUser();
-  const [board, setBoard] = useState<FriendLeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [inviteContacts, setInviteContacts] = useState<InviteContact[]>([]);
-  const [contactsBusy, setContactsBusy] = useState(false);
-  const [contactsError, setContactsError] = useState<string | null>(null);
-  const [inviteBusy, setInviteBusy] = useState(false);
 
-  const loadLeaderboard = useCallback(async () => {
+  const [board, setBoard] = useState<FriendLeaderboardEntry[]>([]);
+  const [incomingInvites, setIncomingInvites] = useState<FriendInvite[]>([]);
+  const [outgoingInvites, setOutgoingInvites] = useState<FriendInvite[]>([]);
+  const [ownInviteCode, setOwnInviteCode] = useState<string | null>(null);
+  const [inviteCodeInput, setInviteCodeInput] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadFriends = useCallback(async () => {
     if (!user) {
       setBoard([]);
+      setIncomingInvites([]);
+      setOutgoingInvites([]);
+      setOwnInviteCode(null);
       return;
     }
+
     setLoading(true);
     setError(null);
     try {
-      const entries = await fetchFriendsLeaderboard(user.id, {
-        tiles: stats.totalTiles,
-        streak: stats.currentStreak,
-        name: user.displayName ?? "You",
-      });
+      const [entries, invites, inviteCode] = await Promise.all([
+        fetchFriendsLeaderboard(user.id, {
+          tiles: stats.totalTiles,
+          streak: stats.currentStreak,
+          name: user.displayName ?? "You",
+        }),
+        fetchFriendInvites(user.id),
+        fetchOwnInviteCode(user.id),
+      ]);
+
       setBoard(entries);
+      setIncomingInvites(invites.incoming);
+      setOutgoingInvites(invites.outgoing);
+      setOwnInviteCode(inviteCode);
     } catch {
-      setError("Couldn't load friends. Pull to refresh later.");
+      setError("Couldn't load friends right now. Pull to refresh later.");
       setBoard([]);
+      setIncomingInvites([]);
+      setOutgoingInvites([]);
     } finally {
       setLoading(false);
     }
-  }, [user, stats.totalTiles, stats.currentStreak]);
+  }, [stats.currentStreak, stats.totalTiles, user]);
 
   useEffect(() => {
     if (authLoading) return;
-    loadLeaderboard();
-  }, [authLoading, loadLeaderboard]);
+    loadFriends().catch(() => {});
+  }, [authLoading, loadFriends]);
 
-  const openMessagesInvite = useCallback(async (phone?: string | null) => {
-    setInviteBusy(true);
+  const refreshFriends = useCallback(async () => {
+    setRefreshing(true);
     try {
-      await Linking.openURL(buildSmsUrl(phone));
-    } catch {
-      await Share.share({ message: getInviteMessage() });
+      await loadFriends();
     } finally {
-      setInviteBusy(false);
+      setRefreshing(false);
     }
-  }, []);
+  }, [loadFriends]);
 
-  const refreshInviteContacts = useCallback(async () => {
-    setContactsBusy(true);
-    setContactsError(null);
+  const shareInvite = useCallback(() => {
+    if (!ownInviteCode) return;
+    Share.share({
+      message: `Join me on Trace. Add friend code: ${ownInviteCode}`,
+    }).catch(() => {});
+  }, [ownInviteCode]);
+
+  const sendInvite = useCallback(async () => {
+    if (!user || sending) return;
+    const code = inviteCodeInput.trim().toLowerCase();
+    if (!code) {
+      setError("Enter a friend code to send an invite.");
+      return;
+    }
+    setSending(true);
+    setError(null);
     try {
-      const picks = await loadInviteContacts();
-      setInviteContacts(picks);
-      if (picks.length === 0) {
-        setContactsError(
-          "No contacts with phone numbers found. You can still invite via Messages below.",
-        );
-      }
-    } catch (error) {
+      await sendFriendInviteByCode(code);
+      setInviteCodeInput("");
+      await loadFriends();
+    } catch (sendError) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Couldn't load contacts right now.";
-      setContactsError(message);
-      setInviteContacts([]);
+        sendError instanceof Error ? sendError.message : "Couldn't send invite.";
+      setError(message);
     } finally {
-      setContactsBusy(false);
+      setSending(false);
     }
-  }, []);
+  }, [inviteCodeInput, loadFriends, sending, user]);
+
+  const runInviteAction = useCallback(
+    async (friendshipId: string, action: "accept" | "decline") => {
+      if (!user) return;
+      setBusyInviteId(friendshipId);
+      setError(null);
+      try {
+        if (action === "accept") {
+          await acceptFriendInvite(user.id, friendshipId);
+        } else {
+          await declineFriendInvite(user.id, friendshipId);
+        }
+        await loadFriends();
+      } catch {
+        setError("Invite action failed. Please try again.");
+      } finally {
+        setBusyInviteId(null);
+      }
+    },
+    [loadFriends, user],
+  );
+
+  const hasFriends = board.some((entry) => !entry.isYou);
+  const youRow =
+    board.find((entry) => entry.isYou) ??
+    (user
+      ? {
+          id: user.id,
+          name: user.displayName ?? "You",
+          initials: initialsFor(user.displayName ?? "You"),
+          tiles: stats.totalTiles,
+          hue: friendHueForUserId(user.id),
+          isYou: true,
+          streak: stats.currentStreak,
+        }
+      : null);
+  const youRank = youRow ? Math.max(1, board.findIndex((entry) => entry.id === youRow.id) + 1) : 1;
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ flex: 1, backgroundColor: colors.bg }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            refreshFriends().catch(() => {});
+          }}
+          tintColor={colors.ember}
+        />
+      }
       contentContainerStyle={{
         padding: spacing.screen,
         gap: spacing.section,
@@ -115,7 +195,7 @@ export default function FriendsScreen() {
     >
       <ScreenHeader
         title="Friends"
-        subtitle="Compare coverage with people you walk with."
+        subtitle="Leaderboard first. Add friends with a code, then accept invites."
       />
 
       {!authLoading && !user ? (
@@ -147,10 +227,8 @@ export default function FriendsScreen() {
                 tintColor={colors.ember}
               />
             </View>
-            <Text
-              style={{ fontFamily: fonts.semibold, fontSize: 17, color: colors.text }}
-            >
-              Sign in to see friends
+            <Text style={{ fontFamily: fonts.semibold, fontSize: 17, color: colors.text }}>
+              Sign in to add friends
             </Text>
           </View>
           <Text
@@ -161,7 +239,7 @@ export default function FriendsScreen() {
               lineHeight: 21,
             }}
           >
-            Connect with Apple, Google, or email to sync tiles and compete with friends.
+            Connect with Apple, Google, or email to send and accept friend invites.
           </Text>
           <PillButton
             label="Sign in or create account"
@@ -171,45 +249,182 @@ export default function FriendsScreen() {
       ) : null}
 
       {user ? (
-        <Animated.View
-          entering={FadeInDown.duration(360).delay(80)}
+        <View
           style={{
             backgroundColor: colors.surfaceRaised,
             borderRadius: radius.lg,
             borderWidth: 1,
-            borderColor: colors.successBorder,
-            padding: 16,
-            gap: 8,
+            borderColor: colors.border,
+            padding: 18,
+            gap: 10,
           }}
         >
           <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}>
-            Leaderboard unlocked
+            Leaderboard
           </Text>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 13,
-              color: colors.textMuted,
-              lineHeight: 19,
-            }}
-          >
-            You're signed in, so this leaderboard updates automatically.
-          </Text>
-        </Animated.View>
+          {loading ? (
+            <View style={{ paddingVertical: 24, alignItems: "center" }}>
+              <ActivityIndicator color={colors.ember} />
+            </View>
+          ) : (
+            <View style={{ gap: 10 }}>
+              {youRow ? (
+                <LeaderboardRow
+                  key={youRow.id}
+                  rank={youRank}
+                  name={youRow.name}
+                  initials={youRow.initials}
+                  tiles={youRow.tiles}
+                  streak={youRow.streak ?? 0}
+                  hue={youRow.hue}
+                  isYou
+                  index={0}
+                />
+              ) : null}
+              {board
+                .filter((row) => !row.isYou)
+                .map((row, i) => (
+                <LeaderboardRow
+                  key={row.id}
+                  rank={board.findIndex((entry) => entry.id === row.id) + 1}
+                  name={row.name}
+                  initials={row.initials}
+                  tiles={row.tiles}
+                  streak={row.streak ?? 0}
+                  hue={row.hue}
+                  isYou={row.isYou}
+                  index={i + 1}
+                />
+                ))}
+              {!hasFriends ? (
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: 13,
+                    color: colors.textMuted,
+                    textAlign: "center",
+                  }}
+                >
+                  Add one friend code to start comparing tile counts.
+                </Text>
+              ) : null}
+            </View>
+          )}
+        </View>
       ) : null}
 
-      {user && (authLoading || loading) ? (
-        <View style={{ paddingVertical: 32, alignItems: "center" }}>
-          <ActivityIndicator color={colors.ember} />
+      {user ? (
+        <View
+          style={{
+            backgroundColor: colors.surfaceRaised,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 18,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}>
+            Add friends
+          </Text>
+          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>
+            Your code: {ownInviteCode ?? "..."}
+          </Text>
+          <PillButton label="Share my code" variant="outline" onPress={shareInvite} />
+          <TextInput
+            value={inviteCodeInput}
+            onChangeText={setInviteCodeInput}
+            autoCapitalize="none"
+            placeholder="paste friend code"
+            placeholderTextColor={colors.textFaint}
+            onSubmitEditing={() => {
+              sendInvite().catch(() => {});
+            }}
+            style={{
+              borderWidth: 1,
+              borderColor: colors.borderStrong,
+              borderRadius: radius.md,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              color: colors.text,
+              fontFamily: fonts.medium,
+              fontSize: 15,
+              textTransform: "lowercase",
+            }}
+          />
+          <PillButton
+            label={sending ? "Sending invite..." : "Send invite"}
+            onPress={() => {
+              sendInvite().catch(() => {});
+            }}
+            disabled={sending}
+          />
         </View>
+      ) : null}
+
+      {user && incomingInvites.length > 0 ? (
+        <View style={{ gap: 10 }}>
+          <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}>
+            Incoming invites
+          </Text>
+          {incomingInvites.map((invite) => (
+            <View
+              key={invite.id}
+              style={{
+                backgroundColor: colors.surfaceRaised,
+                borderRadius: radius.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 14,
+                gap: 10,
+              }}
+            >
+              <Text style={{ fontFamily: fonts.medium, fontSize: 15, color: colors.text }}>
+                {invite.name}
+              </Text>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <PillButton
+                  label={busyInviteId === invite.id ? "Accepting..." : "Accept"}
+                  disabled={busyInviteId === invite.id}
+                  style={{ flex: 1 }}
+                  onPress={() => {
+                    runInviteAction(invite.id, "accept").catch(() => {});
+                  }}
+                />
+                <PillButton
+                  label="Decline"
+                  variant="outline"
+                  disabled={busyInviteId === invite.id}
+                  style={{ flex: 1 }}
+                  onPress={() => {
+                    runInviteAction(invite.id, "decline").catch(() => {});
+                  }}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {user && outgoingInvites.length > 0 ? (
+        <Text
+          style={{
+            fontFamily: fonts.body,
+            fontSize: 13,
+            color: colors.textMuted,
+            textAlign: "center",
+          }}
+        >
+          Pending sent invites: {outgoingInvites.length}
+        </Text>
       ) : null}
 
       {user && error ? (
         <Text
           style={{
             fontFamily: fonts.body,
-            fontSize: 14,
-            color: colors.textMuted,
+            fontSize: 13,
+            color: colors.danger,
             textAlign: "center",
           }}
         >
@@ -217,168 +432,6 @@ export default function FriendsScreen() {
         </Text>
       ) : null}
 
-      {user && !loading && board.length === 0 && !error ? (
-        <View
-          style={{
-            backgroundColor: colors.surfaceRaised,
-            borderRadius: radius.lg,
-            borderWidth: 1,
-            borderColor: colors.border,
-            padding: 24,
-            gap: 8,
-            alignItems: "center",
-          }}
-        >
-          <Image
-            source="sf:person.2"
-            style={{ width: 32, height: 32 }}
-            tintColor={colors.textFaint}
-          />
-          <Text
-            style={{
-              fontFamily: fonts.semibold,
-              fontSize: 16,
-              color: colors.text,
-              textAlign: "center",
-            }}
-          >
-            No friends yet
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 14,
-              color: colors.textMuted,
-              textAlign: "center",
-              lineHeight: 20,
-            }}
-          >
-            Add friends to compare tile counts. Only coverage stats are shared — never
-            routes.
-          </Text>
-        </View>
-      ) : null}
-
-      {user && board.length > 0 ? (
-        <View style={{ gap: 10 }}>
-          {board.map((row, i) => (
-            <LeaderboardRow
-              key={row.id}
-              rank={i + 1}
-              name={row.name}
-              initials={row.initials}
-              tiles={row.tiles}
-              streak={row.streak ?? 0}
-              hue={row.hue}
-              isYou={row.isYou}
-              index={i}
-            />
-          ))}
-        </View>
-      ) : null}
-
-      <View
-        style={{
-          backgroundColor: colors.surfaceRaised,
-          borderRadius: radius.lg,
-          borderWidth: 1,
-          borderColor: colors.border,
-          padding: 18,
-          gap: 12,
-        }}
-      >
-        <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text }}>
-          Invite friends
-        </Text>
-        <Text
-          style={{
-            fontFamily: fonts.body,
-            fontSize: 13,
-            color: colors.textMuted,
-            lineHeight: 19,
-          }}
-        >
-          Open Messages with a ready-to-send beta invite, or pick someone from your contacts.
-        </Text>
-
-        <PillButton
-          label={inviteBusy ? "Opening Messages…" : "Invite via Messages"}
-          disabled={inviteBusy}
-          onPress={() => {
-            openMessagesInvite().catch(() => {});
-          }}
-        />
-
-        <PillButton
-          label="Share invite link"
-          variant="outline"
-          onPress={() => {
-            Share.share({ message: getInviteMessage() }).catch(() => {});
-          }}
-        />
-
-        {contactsBusy ? <ActivityIndicator color={colors.ember} /> : null}
-
-        {!contactsBusy && inviteContacts.length === 0 ? (
-          <PillButton
-            label="Find contacts"
-            variant="outline"
-            onPress={() => {
-              refreshInviteContacts().catch(() => {});
-            }}
-          />
-        ) : null}
-
-        {contactsError ? (
-          <View style={{ gap: 8 }}>
-            <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.danger }}>
-              {contactsError}
-            </Text>
-            <PillButton
-              label="Try again"
-              variant="outline"
-              style={{ paddingVertical: 8, paddingHorizontal: 14 }}
-              onPress={() => {
-                refreshInviteContacts().catch(() => {});
-              }}
-            />
-          </View>
-        ) : null}
-
-        {inviteContacts.map((contact) => (
-          <View
-            key={contact.id}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 8,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: radius.md,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.text }}>
-                {contact.name}
-              </Text>
-              <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textFaint }}>
-                {contact.phone}
-              </Text>
-            </View>
-            <PillButton
-              label="Invite"
-              variant="outline"
-              style={{ paddingVertical: 8, paddingHorizontal: 14 }}
-              onPress={() => {
-                openMessagesInvite(contact.phone).catch(() => {});
-              }}
-            />
-          </View>
-        ))}
-      </View>
 
       <Text
         style={{
@@ -388,7 +441,7 @@ export default function FriendsScreen() {
           textAlign: "center",
         }}
       >
-        Friends only see tile counts — never your routes.
+        Friends only see tile counts and public profile names - never your route path.
       </Text>
     </ScrollView>
   );

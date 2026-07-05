@@ -18,7 +18,9 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 import { useTheme } from "@/hooks/use-theme";
 import { useActivitySession } from "@/hooks/use-activity-session";
 import { useActivityShareCard } from "@/hooks/use-activity-share-card";
+import { useSetting } from "@/hooks/use-settings";
 import { activityRecorder } from "@/lib/activity/activity-recorder";
+import { buildDemoFriendTiles } from "@/lib/friends/demo-friend-tiles";
 import {
   fetchFriendTilesInCells,
   friendHueForUserId,
@@ -26,6 +28,7 @@ import {
 } from "@/lib/friends/friends-service";
 import { cellsInBBox, estimateCellCount, type BoundingBox } from "@/lib/h3";
 import { locationService } from "@/lib/location/location-service";
+import { SETTINGS_KEYS } from "@/lib/storage/settings";
 import { tileRepository, type StompedTile } from "@/lib/storage/tile-db";
 import { stompEngine } from "@/lib/stomp/stomp-engine";
 import { useSessionStore } from "@/store/session-store";
@@ -65,6 +68,10 @@ export function FogMap() {
   const [revealCount, setRevealCount] = useState(0);
   const { activeSession, latestActivity } = useActivitySession();
   const { user } = useAuthUser();
+  const [demoFriendTilesEnabled] = useSetting(
+    SETTINGS_KEYS.demoFriendTilesEnabled,
+    false,
+  );
   const friendFetchIdRef = useRef(0);
 
   const followUser = useSessionStore((s) => s.followUser);
@@ -94,6 +101,19 @@ export function FogMap() {
     [],
   );
 
+  const colorMapForTiles = useCallback(
+    (tiles: FriendTile[]): Record<string, string> => {
+      const colorMap: Record<string, string> = {};
+      tiles.forEach((tile) => {
+        if (!colorMap[tile.userId]) {
+          colorMap[tile.userId] = friendFillColor(tile.userId);
+        }
+      });
+      return colorMap;
+    },
+    [friendFillColor],
+  );
+
   const recomputeLayers = useCallback(() => {
     const box = regionToBBox(regionRef.current);
     const estimate = estimateCellCount(box);
@@ -119,9 +139,19 @@ export function FogMap() {
     setFogCells(fog.slice(0, Math.max(0, POLYGON_BUDGET - revealed.length)));
     setRevealedTiles(revealed);
 
+    const demoTiles = demoFriendTilesEnabled
+      ? buildDemoFriendTiles({
+          viewportCells,
+          center: {
+            latitude: regionRef.current.latitude,
+            longitude: regionRef.current.longitude,
+          },
+        })
+      : [];
+
     if (!user) {
-      setFriendTiles([]);
-      setFriendTileColors({});
+      setFriendTiles(demoTiles);
+      setFriendTileColors(colorMapForTiles(demoTiles));
       return;
     }
 
@@ -129,20 +159,16 @@ export function FogMap() {
     fetchFriendTilesInCells(user.id, viewportCells)
       .then((tiles) => {
         if (fetchId !== friendFetchIdRef.current) return;
-        setFriendTiles(tiles);
-        const colorMap: Record<string, string> = {};
-        tiles.forEach((tile) => {
-          if (!colorMap[tile.userId]) {
-            colorMap[tile.userId] = friendFillColor(tile.userId);
-          }
-        });
-        setFriendTileColors(colorMap);
+        const mergedTiles = [...demoTiles, ...tiles];
+        setFriendTiles(mergedTiles);
+        setFriendTileColors(colorMapForTiles(mergedTiles));
       })
       .catch(() => {
         if (fetchId !== friendFetchIdRef.current) return;
-        setFriendTiles([]);
+        setFriendTiles(demoTiles);
+        setFriendTileColors(colorMapForTiles(demoTiles));
       });
-  }, [friendFillColor, user]);
+  }, [colorMapForTiles, demoFriendTilesEnabled, user]);
 
   const onRegionChangeComplete = useCallback(
     (region: Region) => {

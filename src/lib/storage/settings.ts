@@ -17,6 +17,7 @@ export const SETTINGS_KEYS = {
   sessionSummaryNotifications: "trace.sessionSummaryNotifications",
   dailyNudgeNotifications: "trace.dailyNudgeNotifications",
   lastAppOpenDate: "trace.lastAppOpenDate",
+  demoFriendTilesEnabled: "trace.demoFriendTilesEnabled",
 } as const;
 
 export const settings = {

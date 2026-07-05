@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
@@ -37,6 +38,7 @@ export function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [closeHovered, setCloseHovered] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const emailValid = email.includes("@") && password.length >= 6;
   const showApple = process.env.EXPO_OS === "ios";
@@ -66,6 +68,11 @@ export function SignInScreen() {
     } else {
       run("email", () => authService.signInWithEmail(email, password));
     }
+  };
+
+  const refreshScreen = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 520);
   };
 
   return (
@@ -125,6 +132,13 @@ export function SignInScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshScreen}
+            tintColor={colors.ember}
+          />
+        }
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: "center",

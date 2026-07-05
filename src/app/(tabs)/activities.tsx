@@ -1,4 +1,5 @@
-import { ScrollView, View } from "react-native";
+import { useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 
 import { ActivityHistoryRow } from "@/components/activity/activity-history-row";
 import { HealthSummaryCard } from "@/components/activity/health-summary-card";
@@ -20,6 +21,7 @@ import { SETTINGS_KEYS } from "@/lib/storage/settings";
 
 export default function ActivitiesScreen() {
   const { colors } = useTheme();
+  const [refreshing, setRefreshing] = useState(false);
   const stats = useStats();
   const activityHistory = useActivityHistory(30);
   const { activeSession, latestActivity } = useActivitySession();
@@ -43,11 +45,23 @@ export default function ActivitiesScreen() {
     share(latestActivity);
   };
 
+  const refreshScreen = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 520);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={{ flex: 1, backgroundColor: colors.bg }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshScreen}
+            tintColor={colors.ember}
+          />
+        }
         contentContainerStyle={{
           padding: spacing.screen,
           gap: spacing.section,

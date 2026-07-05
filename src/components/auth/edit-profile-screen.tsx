@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -40,6 +41,7 @@ export function EditProfileScreen() {
     user?.avatar ?? { icon: "figure.walk", hue: 24 },
   );
   const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -85,6 +87,11 @@ export function EditProfileScreen() {
     }
   };
 
+  const refreshScreen = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 520);
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.bg }}
@@ -93,6 +100,13 @@ export function EditProfileScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshScreen}
+            tintColor={colors.ember}
+          />
+        }
         contentContainerStyle={{
           padding: spacing.screen,
           paddingTop: insets.top + 16,

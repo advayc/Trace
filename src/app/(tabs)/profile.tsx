@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
-import { Alert, Linking, ScrollView, Switch, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Linking, RefreshControl, ScrollView, Switch, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AccountRow } from "@/components/auth/account-row";
@@ -118,15 +118,32 @@ export default function ProfileScreen() {
     SETTINGS_KEYS.dailyNudgeNotifications,
     true,
   );
+  const [demoFriendTilesEnabled, setDemoFriendTilesEnabled] = useSetting(
+    SETTINGS_KEYS.demoFriendTilesEnabled,
+    false,
+  );
+  const [refreshing, setRefreshing] = useState(false);
+
+  const syncProfileStatus = useCallback(async () => {
+    const granted = await hasNotificationPermission();
+    setNotifGranted(granted);
+    const active = await isBackgroundTrackingActive();
+    if (active !== bgEnabled) setBgEnabled(active);
+  }, [bgEnabled, setBgEnabled]);
 
   useEffect(() => {
-    void hasNotificationPermission().then(setNotifGranted);
-    (async () => {
-      const active = await isBackgroundTrackingActive();
-      if (active !== bgEnabled) setBgEnabled(active);
-    })();
+    syncProfileStatus().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [syncProfileStatus]);
+
+  const refreshScreen = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await syncProfileStatus();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [syncProfileStatus]);
 
   const toggleBackground = async (next: boolean) => {
     setBgBusy(true);
@@ -177,6 +194,15 @@ export default function ProfileScreen() {
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={{ flex: 1, backgroundColor: colors.bg }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            refreshScreen().catch(() => {});
+          }}
+          tintColor={colors.ember}
+        />
+      }
       contentContainerStyle={{
         padding: spacing.screen,
         gap: spacing.section,
@@ -266,12 +292,25 @@ export default function ProfileScreen() {
             />
           }
         />
+        <SettingRow
+          sf="person.3.fill"
+          title="Demo friend tiles"
+          subtitle="Show 3 simulated nearby profiles so map screenshots look populated."
+          index={3}
+          control={
+            <Switch
+              value={demoFriendTilesEnabled}
+              onValueChange={setDemoFriendTilesEnabled}
+              trackColor={{ true: colors.ember }}
+            />
+          }
+        />
         {process.env.EXPO_OS === "ios" && healthAvailable ? (
           <SettingRow
             sf="heart.fill"
             title="Apple Health"
             subtitle="Save workouts and read calories, heart rate, and steps."
-            index={3}
+            index={4}
             control={
               <Switch
                 value={healthEnabled}

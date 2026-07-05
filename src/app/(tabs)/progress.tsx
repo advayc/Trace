@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { AchievementDetailModal } from "@/components/stats/achievement-detail-modal";
@@ -30,14 +30,26 @@ export default function ProgressScreen() {
   const [units] = useSetting<Units>(SETTINGS_KEYS.units, "km");
   const unlockedIds = useUnlockedAchievementIds();
   const [selectedAchievementId, setSelectedAchievementId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const selectedAchievement = ACHIEVEMENTS.find((achievement) => achievement.id === selectedAchievementId) ?? null;
   const selectedUnlocked = selectedAchievement ? unlockedIds.includes(selectedAchievement.id) : false;
+  const refreshScreen = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 520);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={{ flex: 1, backgroundColor: colors.bg }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshScreen}
+            tintColor={colors.ember}
+          />
+        }
         contentContainerStyle={{
           padding: spacing.screen,
           gap: spacing.section,
