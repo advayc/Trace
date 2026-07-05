@@ -31,6 +31,7 @@ export const sessionPresenceService = {
         avgHeartRateBpm: activity.avgHeartRateBpm,
         newTiles: activity.newTiles,
         reclaimedTiles: activity.reclaimedTiles,
+        route: activity.route,
       }),
       sessionNotificationService.onSessionEnded(),
       notifySessionSummary(activity),

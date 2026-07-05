@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
-import MapView, { type Region } from "react-native-maps";
+import MapView, { Polyline, type Region } from "react-native-maps";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -86,6 +86,8 @@ export function FogMap() {
       };
     })
     .slice(0, 5);
+
+  const activeRunRoute = activeSession?.type === "run" ? activeSession.route : [];
 
   const friendFillColor = useCallback(
     (userId: string) => `hsla(${friendHueForUserId(userId)}, 82%, 60%, 0.24)`,
@@ -243,6 +245,24 @@ export function FogMap() {
         <FogHexLayer cells={fogCells} />
         <FriendHexLayer tiles={friendTiles} colorByUserId={friendTileColors} />
         <RevealedHexLayer tiles={revealedTiles} />
+        {activeRunRoute.length >= 2 ? (
+          <>
+            <Polyline
+              coordinates={activeRunRoute}
+              strokeColor={colors.emberDim}
+              strokeWidth={9}
+              lineCap="round"
+              lineJoin="round"
+            />
+            <Polyline
+              coordinates={activeRunRoute}
+              strokeColor={colors.ember}
+              strokeWidth={4}
+              lineCap="round"
+              lineJoin="round"
+            />
+          </>
+        ) : null}
       </MapView>
 
       <View

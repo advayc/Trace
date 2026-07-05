@@ -54,7 +54,12 @@ class ActivityRecorder {
   }
 
   getActiveSession(): ActiveSession | null {
-    return this.session ? { ...this.session } : null;
+    return this.session
+      ? {
+          ...this.session,
+          route: [...this.route],
+        }
+      : null;
   }
 
   latestActivity(): Activity | null {
@@ -76,6 +81,7 @@ class ActivityRecorder {
       avgHeartRateBpm: null,
       newTiles: 0,
       reclaimedTiles: 0,
+      route: [],
     };
     this.route = [];
     this.attachListeners();
@@ -163,13 +169,13 @@ class ActivityRecorder {
     const offSample = stompEngine.on("sample:accepted", ({ sample, distanceM }) => {
       if (!this.session) return;
       this.route.push({ latitude: sample.lat, longitude: sample.lng });
-      if (distanceM > 0) {
-        this.session = {
-          ...this.session,
-          distanceM: this.session.distanceM + distanceM,
-        };
-        this.emit("session:updated", { ...this.session });
-      }
+      this.session = {
+        ...this.session,
+        distanceM:
+          distanceM > 0 ? this.session.distanceM + distanceM : this.session.distanceM,
+        route: [...this.route],
+      };
+      this.emit("session:updated", { ...this.session, route: [...this.route] });
     });
 
     const offNew = stompEngine.on("tile:new", () => {

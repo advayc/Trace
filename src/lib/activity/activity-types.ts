@@ -31,4 +31,5 @@ export interface ActiveSession {
   avgHeartRateBpm: number | null;
   newTiles: number;
   reclaimedTiles: number;
+  route: ActivityRoutePoint[];
 }
