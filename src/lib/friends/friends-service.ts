@@ -41,6 +41,7 @@ export interface FriendTile {
   userId: string;
   visitCount: number;
   displayName: string | null;
+  username?: string | null;
 }
 
 export interface FriendInvite {
@@ -209,17 +210,21 @@ export async function fetchFriendTilesInCells(
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name")
+    .select("id, display_name, username")
     .in("id", friendIds);
   const profileById = new Map(
-    (profiles ?? []).map((profile) => [profile.id, profile.display_name]),
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      { displayName: profile.display_name, username: profile.username },
+    ]),
   );
 
   return (data ?? []).map((row) => ({
     h3Index: row.h3_index,
     userId: row.user_id,
     visitCount: row.visit_count,
-    displayName: profileById.get(row.user_id) ?? null,
+    displayName: profileById.get(row.user_id)?.displayName ?? null,
+    username: profileById.get(row.user_id)?.username ?? null,
   }));
 }
 

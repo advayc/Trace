@@ -83,8 +83,8 @@ export const FriendHexLayer = memo(function FriendHexLayer({
           key={`${tile.userId}:${tile.h3Index}`}
           coordinates={cellPolygonCoords(tile.h3Index)}
           fillColor={colorByUserId[tile.userId] ?? "rgba(110,231,183,0.24)"}
-          strokeColor="rgba(255,255,255,0.05)"
-          strokeWidth={0.45}
+          strokeColor="rgba(255,255,255,0.18)"
+          strokeWidth={0.8}
         />
       ))}
     </>

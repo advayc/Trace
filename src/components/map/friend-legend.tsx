@@ -7,6 +7,7 @@ export interface FriendLegendItem {
   userId: string;
   color: string;
   displayName: string | null;
+  username?: string | null;
 }
 
 function initialsFromName(name: string | null, userId: string): string {
@@ -56,7 +57,7 @@ export function FriendLegend({ items }: { items: FriendLegendItem[] }) {
             }}
           />
           <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.text }}>
-            {initialsFromName(item.displayName, item.userId)}
+            {item.username ? `@${item.username}` : initialsFromName(item.displayName, item.userId)}
           </Text>
         </View>
       ))}

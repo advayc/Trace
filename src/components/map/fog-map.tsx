@@ -1,8 +1,8 @@
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, View } from "react-native";
-import MapView, { Polyline, type Region } from "react-native-maps";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import MapView, { Marker, Polyline, type Region } from "react-native-maps";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,7 +13,7 @@ import { NeighborhoodPill } from "@/components/map/neighborhood-pill";
 import { RevealToast } from "@/components/map/reveal-toast";
 import { LiveStatsBar } from "@/components/activity/live-stats-bar";
 import { SessionControls } from "@/components/activity/session-controls";
-import { radius, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { fonts, radius, TAB_BAR_HEIGHT } from "@/constants/theme";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useTheme } from "@/hooks/use-theme";
 import { useActivitySession } from "@/hooks/use-activity-session";
@@ -26,7 +26,7 @@ import {
   friendHueForUserId,
   type FriendTile,
 } from "@/lib/friends/friends-service";
-import { cellsInBBox, estimateCellCount, type BoundingBox } from "@/lib/h3";
+import { cellCenter, cellsInBBox, estimateCellCount, type BoundingBox } from "@/lib/h3";
 import { locationService } from "@/lib/location/location-service";
 import { SETTINGS_KEYS } from "@/lib/storage/settings";
 import { tileRepository, type StompedTile } from "@/lib/storage/tile-db";
@@ -90,14 +90,59 @@ export function FogMap() {
         userId,
         color: friendTileColors[userId],
         displayName: tile?.displayName ?? null,
+        username: tile?.username ?? null,
       };
     })
     .slice(0, 5);
 
+  const friendNamePins = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        userId: string;
+        displayName: string | null;
+        username: string | null;
+        count: number;
+        latTotal: number;
+        lngTotal: number;
+      }
+    >();
+
+    friendTiles.forEach((tile) => {
+      const center = cellCenter(tile.h3Index);
+      const existing = grouped.get(tile.userId);
+      if (!existing) {
+        grouped.set(tile.userId, {
+          userId: tile.userId,
+          displayName: tile.displayName,
+          username: tile.username ?? null,
+          count: 1,
+          latTotal: center.latitude,
+          lngTotal: center.longitude,
+        });
+        return;
+      }
+      existing.count += 1;
+      existing.latTotal += center.latitude;
+      existing.lngTotal += center.longitude;
+      if (!existing.displayName && tile.displayName) existing.displayName = tile.displayName;
+      if (!existing.username && tile.username) existing.username = tile.username;
+    });
+
+    return Array.from(grouped.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6)
+      .map((row) => ({
+        ...row,
+        latitude: row.latTotal / row.count,
+        longitude: row.lngTotal / row.count,
+      }));
+  }, [friendTiles]);
+
   const activeRunRoute = activeSession?.type === "run" ? activeSession.route : [];
 
   const friendFillColor = useCallback(
-    (userId: string) => `hsla(${friendHueForUserId(userId)}, 82%, 60%, 0.24)`,
+    (userId: string) => `hsla(${friendHueForUserId(userId)}, 84%, 60%, 0.40)`,
     [],
   );
 
@@ -270,6 +315,48 @@ export function FogMap() {
       >
         <FogHexLayer cells={fogCells} />
         <FriendHexLayer tiles={friendTiles} colorByUserId={friendTileColors} />
+        {friendNamePins.map((pin) => (
+          <Marker
+            key={`friend-pin-${pin.userId}`}
+            coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={false}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                borderRadius: radius.pill,
+                borderWidth: 1,
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.overlay,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+              }}
+            >
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: friendTileColors[pin.userId] ?? colors.mint,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.6)",
+                }}
+              />
+              <Text
+                style={{
+                  fontFamily: fonts.medium,
+                  fontSize: 11,
+                  color: colors.text,
+                }}
+              >
+                {pin.username ? `@${pin.username}` : (pin.displayName ?? "Friend")}
+              </Text>
+            </View>
+          </Marker>
+        ))}
         <RevealedHexLayer tiles={revealedTiles} />
         {activeRunRoute.length >= 2 ? (
           <>

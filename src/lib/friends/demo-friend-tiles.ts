@@ -5,13 +5,19 @@ import type { FriendTile } from "@/lib/friends/friends-service";
 interface DemoFriendProfile {
   userId: string;
   displayName: string;
+  username: string;
   targetTiles: number;
 }
 
 export const DEMO_FRIEND_PROFILES: DemoFriendProfile[] = [
-  { userId: "demo-maya", displayName: "Maya Park", targetTiles: 18 },
-  { userId: "demo-jules", displayName: "Jules Rivera", targetTiles: 14 },
-  { userId: "demo-noah", displayName: "Noah Chen", targetTiles: 16 },
+  { userId: "demo-maya", displayName: "Maya Park", username: "demo_maya", targetTiles: 18 },
+  {
+    userId: "demo-jules",
+    displayName: "Jules Rivera",
+    username: "demo_jules",
+    targetTiles: 14,
+  },
+  { userId: "demo-noah", displayName: "Noah Chen", username: "demo_noah", targetTiles: 16 },
 ];
 
 function distanceScoreMeters(
@@ -67,6 +73,7 @@ export function buildDemoFriendTiles(params: {
         userId: profile.userId,
         visitCount: 1,
         displayName: profile.displayName,
+        username: profile.username,
       });
       picked += 1;
     }
