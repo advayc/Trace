@@ -24,9 +24,9 @@ import {
   declineFriendInvite,
   fetchFriendInvites,
   fetchFriendsLeaderboard,
-  fetchOwnInviteCode,
+  fetchOwnUsername,
   friendHueForUserId,
-  sendFriendInviteByCode,
+  sendFriendInviteByUsername,
   type FriendInvite,
   type FriendLeaderboardEntry,
 } from "@/lib/friends/friends-service";
@@ -48,8 +48,8 @@ export default function FriendsScreen() {
   const [board, setBoard] = useState<FriendLeaderboardEntry[]>([]);
   const [incomingInvites, setIncomingInvites] = useState<FriendInvite[]>([]);
   const [outgoingInvites, setOutgoingInvites] = useState<FriendInvite[]>([]);
-  const [ownInviteCode, setOwnInviteCode] = useState<string | null>(null);
-  const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [ownUsername, setOwnUsername] = useState<string | null>(null);
+  const [usernameInput, setUsernameInput] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,27 +62,27 @@ export default function FriendsScreen() {
       setBoard([]);
       setIncomingInvites([]);
       setOutgoingInvites([]);
-      setOwnInviteCode(null);
+      setOwnUsername(null);
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      const [entries, invites, inviteCode] = await Promise.all([
+      const [entries, invites, username] = await Promise.all([
         fetchFriendsLeaderboard(user.id, {
           tiles: stats.totalTiles,
           streak: stats.currentStreak,
           name: user.displayName ?? "You",
         }),
         fetchFriendInvites(user.id),
-        fetchOwnInviteCode(user.id),
+        fetchOwnUsername(user.id),
       ]);
 
       setBoard(entries);
       setIncomingInvites(invites.incoming);
       setOutgoingInvites(invites.outgoing);
-      setOwnInviteCode(inviteCode);
+      setOwnUsername(username);
     } catch {
       setError("Couldn't load friends right now. Pull to refresh later.");
       setBoard([]);
@@ -108,24 +108,24 @@ export default function FriendsScreen() {
   }, [loadFriends]);
 
   const shareInvite = useCallback(() => {
-    if (!ownInviteCode) return;
+    if (!ownUsername) return;
     Share.share({
-      message: `Join me on Trace. Add friend code: ${ownInviteCode}`,
+      message: `Join me on Trace. Add @${ownUsername} as a friend.`,
     }).catch(() => {});
-  }, [ownInviteCode]);
+  }, [ownUsername]);
 
   const sendInvite = useCallback(async () => {
     if (!user || sending) return;
-    const code = inviteCodeInput.trim().toLowerCase();
-    if (!code) {
-      setError("Enter a friend code to send an invite.");
+    const normalized = usernameInput.trim().replace(/^@+/, "").toLowerCase();
+    if (!normalized) {
+      setError("Enter a username to send an invite.");
       return;
     }
     setSending(true);
     setError(null);
     try {
-      await sendFriendInviteByCode(code);
-      setInviteCodeInput("");
+      await sendFriendInviteByUsername(normalized);
+      setUsernameInput("");
       await loadFriends();
     } catch (sendError) {
       const message =
@@ -134,7 +134,7 @@ export default function FriendsScreen() {
     } finally {
       setSending(false);
     }
-  }, [inviteCodeInput, loadFriends, sending, user]);
+  }, [loadFriends, sending, user, usernameInput]);
 
   const runInviteAction = useCallback(
     async (friendshipId: string, action: "accept" | "decline") => {
@@ -195,7 +195,7 @@ export default function FriendsScreen() {
     >
       <ScreenHeader
         title="Friends"
-        subtitle="Leaderboard first. Add friends with a code, then accept invites."
+        subtitle="Leaderboard first. Add friends by username, then accept invites."
       />
 
       {!authLoading && !user ? (
@@ -305,7 +305,7 @@ export default function FriendsScreen() {
                     textAlign: "center",
                   }}
                 >
-                  Add one friend code to start comparing tile counts.
+                  Add one username to start comparing tile counts.
                 </Text>
               ) : null}
             </View>
@@ -328,14 +328,14 @@ export default function FriendsScreen() {
             Add friends
           </Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>
-            Your code: {ownInviteCode ?? "..."}
+            Your username: {ownUsername ? `@${ownUsername}` : "..."}
           </Text>
-          <PillButton label="Share my code" variant="outline" onPress={shareInvite} />
+          <PillButton label="Share username" variant="outline" onPress={shareInvite} />
           <TextInput
-            value={inviteCodeInput}
-            onChangeText={setInviteCodeInput}
+            value={usernameInput}
+            onChangeText={setUsernameInput}
             autoCapitalize="none"
-            placeholder="paste friend code"
+            placeholder="enter username"
             placeholderTextColor={colors.textFaint}
             onSubmitEditing={() => {
               sendInvite().catch(() => {});
@@ -349,7 +349,6 @@ export default function FriendsScreen() {
               color: colors.text,
               fontFamily: fonts.medium,
               fontSize: 15,
-              textTransform: "lowercase",
             }}
           />
           <PillButton
@@ -380,7 +379,7 @@ export default function FriendsScreen() {
               }}
             >
               <Text style={{ fontFamily: fonts.medium, fontSize: 15, color: colors.text }}>
-                {invite.name}
+                {invite.name} {invite.username ? `(@${invite.username})` : ""}
               </Text>
               <View style={{ flexDirection: "row", gap: 8 }}>
                 <PillButton
@@ -441,7 +440,7 @@ export default function FriendsScreen() {
           textAlign: "center",
         }}
       >
-        Friends only see tile counts and public profile names - never your route path.
+        Friends only see tile counts and public usernames - never your route path.
       </Text>
     </ScrollView>
   );

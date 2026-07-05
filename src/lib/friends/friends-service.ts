@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 interface FriendProfilePreview {
   id: string;
   display_name: string | null;
-  invite_code: string;
+  username: string;
 }
 
 export interface FriendLeaderboardEntry {
@@ -48,7 +48,7 @@ export interface FriendInvite {
   userId: string;
   name: string;
   initials: string;
-  inviteCode: string;
+  username: string;
   createdAt: string;
 }
 
@@ -57,23 +57,23 @@ export interface FriendInviteSnapshot {
   outgoing: FriendInvite[];
 }
 
-export async function fetchOwnInviteCode(currentUserId: string): Promise<string> {
+export async function fetchOwnUsername(currentUserId: string): Promise<string> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("invite_code")
+    .select("username")
     .eq("id", currentUserId)
     .single();
   if (error) throw error;
-  return data.invite_code;
+  return data.username;
 }
 
-export async function sendFriendInviteByCode(inviteCode: string): Promise<void> {
-  const normalized = inviteCode.trim().toLowerCase();
+export async function sendFriendInviteByUsername(username: string): Promise<void> {
+  const normalized = username.trim().replace(/^@+/, "").toLowerCase();
   if (!normalized) {
-    throw new Error("Invite code is required.");
+    throw new Error("Username is required.");
   }
   const { error } = await supabase.rpc("send_friend_invite", {
-    target_invite_code: normalized,
+    target_username: normalized,
   });
   if (error) throw error;
 }
@@ -140,7 +140,7 @@ export async function fetchFriendInvites(
   if (counterpartIds.length > 0) {
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, display_name, invite_code")
+      .select("id, display_name, username")
       .in("id", counterpartIds);
     if (profilesError) throw profilesError;
     profileById = new Map(
@@ -161,7 +161,7 @@ export async function fetchFriendInvites(
       userId: counterpartId,
       name,
       initials: initialsFor(name),
-      inviteCode: profile?.invite_code ?? "",
+      username: profile?.username ?? "",
       createdAt: edge.created_at,
     } satisfies FriendInvite;
     if (fromRequester) {

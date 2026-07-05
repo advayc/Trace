@@ -34,6 +34,13 @@ function toUser(supabaseUser: SupabaseUser, profile?: Profile | null): User {
   const metaPicture =
     (meta.avatar_url as string | undefined) ?? (meta.picture as string | undefined);
   const avatarUrl = profile?.avatarUrl ?? metaPicture ?? null;
+  const usernameFromMeta =
+    (meta.user_name as string | undefined) ??
+    (meta.preferred_username as string | undefined);
+  const username =
+    profile?.username ??
+    usernameFromMeta?.trim().toLowerCase() ??
+    `walker_${supabaseUser.id.replace(/-/g, "").slice(0, 6)}`;
 
   const rawProvider = supabaseUser.app_metadata?.provider;
   const provider: User["provider"] =
@@ -44,6 +51,7 @@ function toUser(supabaseUser: SupabaseUser, profile?: Profile | null): User {
   return {
     id: supabaseUser.id,
     displayName,
+    username,
     email: supabaseUser.email ?? null,
     avatarUrl,
     avatar: parseAvatar(avatarUrl),
@@ -148,7 +156,9 @@ export const authService: AuthProvider = {
 
   async updateProfile(patch: {
     displayName?: string;
+    username?: string;
     avatar?: User["avatar"];
+    avatarUrl?: string | null;
   }): Promise<User> {
     const { data } = await supabase.auth.getSession();
     const supabaseUser = data.session?.user;
@@ -160,8 +170,15 @@ export const authService: AuthProvider = {
     if (patch.displayName !== undefined) {
       meta.full_name = patch.displayName.trim() || null;
     }
+    if (patch.username !== undefined) {
+      meta.preferred_username = patch.username.trim().toLowerCase() || null;
+    }
     if (patch.avatar !== undefined) {
       meta.avatar_preset = serializeAvatar(patch.avatar);
+    }
+    if (patch.avatarUrl !== undefined) {
+      meta.avatar_url = patch.avatarUrl;
+      meta.picture = patch.avatarUrl;
     }
     if (Object.keys(meta).length > 0) {
       await supabase.auth.updateUser({ data: meta });

@@ -8,6 +8,7 @@ import type { AvatarPreset } from "@/lib/auth/avatar-presets";
 export interface User {
   id: string;
   displayName: string | null;
+  username: string;
   email: string | null;
   avatarUrl: string | null;
   avatar: AvatarPreset;
@@ -23,6 +24,8 @@ export interface AuthProvider {
   signOut(): Promise<void>;
   updateProfile(patch: {
     displayName?: string;
+    username?: string;
     avatar?: AvatarPreset;
+    avatarUrl?: string | null;
   }): Promise<User>;
 }

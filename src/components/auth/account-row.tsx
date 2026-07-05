@@ -175,6 +175,7 @@ export function AccountRow() {
 
         <View style={{ gap: 14 }}>
           <AccountDetail label="Name" value={displayName} />
+          <AccountDetail label="Username" value={`@${user.username}`} />
           {user.email ? (
             <AccountDetail label="Email" value={user.email} />
           ) : (

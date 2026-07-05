@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase/client";
 
 export interface Profile {
   displayName: string | null;
+  username: string;
   avatarUrl: string | null;
   avatar: AvatarPreset;
 }
@@ -17,13 +18,14 @@ export interface Profile {
 export async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url")
+    .select("display_name, username, avatar_url")
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   return {
     displayName: data.display_name,
+    username: data.username,
     avatarUrl: data.avatar_url,
     avatar: parseAvatar(data.avatar_url),
   };
@@ -31,13 +33,23 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
 
 export async function updateProfile(
   userId: string,
-  patch: { displayName?: string; avatar?: AvatarPreset },
+  patch: {
+    displayName?: string;
+    username?: string;
+    avatar?: AvatarPreset;
+    avatarUrl?: string | null;
+  },
 ): Promise<void> {
-  const row: { display_name?: string; avatar_url?: string } = {};
+  const row: { display_name?: string; username?: string; avatar_url?: string | null } = {};
   if (patch.displayName !== undefined) {
     row.display_name = patch.displayName.trim() || undefined;
   }
-  if (patch.avatar !== undefined) {
+  if (patch.username !== undefined) {
+    row.username = patch.username.trim().toLowerCase() || undefined;
+  }
+  if (patch.avatarUrl !== undefined) {
+    row.avatar_url = patch.avatarUrl;
+  } else if (patch.avatar !== undefined) {
     row.avatar_url = serializeAvatar(patch.avatar);
   }
 

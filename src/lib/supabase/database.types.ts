@@ -18,6 +18,7 @@ export interface Database {
         Row: {
           id: string;
           display_name: string | null;
+          username: string;
           avatar_url: string | null;
           invite_code: string;
           provider: "device" | "apple" | "google" | "email";
@@ -27,6 +28,7 @@ export interface Database {
         Insert: {
           id: string;
           display_name?: string | null;
+          username?: string;
           avatar_url?: string | null;
           invite_code?: string;
           provider?: "device" | "apple" | "google" | "email";
@@ -36,6 +38,7 @@ export interface Database {
         Update: {
           id?: string;
           display_name?: string | null;
+          username?: string;
           avatar_url?: string | null;
           invite_code?: string;
           provider?: "device" | "apple" | "google" | "email";
@@ -126,7 +129,7 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       send_friend_invite: {
-        Args: { target_invite_code: string };
+        Args: { target_username: string };
         Returns: Database["public"]["Tables"]["friendships"]["Row"];
       };
     };
