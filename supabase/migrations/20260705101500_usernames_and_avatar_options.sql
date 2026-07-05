@@ -80,7 +80,9 @@ begin
 end;
 $$;
 
-create or replace function public.send_friend_invite(target_username text)
+drop function if exists public.send_friend_invite(text);
+
+create function public.send_friend_invite(target_username text)
 returns public.friendships
 language plpgsql
 security definer
